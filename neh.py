@@ -1,40 +1,24 @@
 import functools
 import numpy as np
+from datetime import datetime, timedelta
 
-def parse_duration(job_list):
+def neh(job_list, machine_dict, start_date):
     # TODO functional style
-    duration_matrix = [[0] * len(job) for job in job_list]
-    i = 0
-    for job in job_list:
-        for machine, duration in job.items():
-            duration_matrix[i][int(machine[1:]) - 1] = duration
-        i += 1
-    return duration_matrix
 
-def parse_order(job_list):
-    return list(map(lambda job: list(map(lambda machine: int(machine[1:]) - 1, job.keys())), job_list))
-
-def neh(job_list, machine_amount):
-    # TODO functional style
     queue = list()
-    # Duration matrix, rows - machines, columns - jobs
-    duration_matrix = parse_duration(job_list)
-    # Order matrix
-    order_matrix = parse_order(job_list)
     # Sort the job list from longest to shortest duration
-    jobs_sorted = sorted(range(len(job_list)), key=lambda i: calculate_job_makespan(job_list[i]), reverse=True)
+    jobs_sorted = sorted(job_list.items(), key=lambda job: calculate_job_makespan(job[1]), reverse=True)
     queue.append(jobs_sorted[0])
     for i in range(1, len(job_list)):
         c_min = float('inf')
         for j in range(i + 1):
             queue_tmp = insert(queue, j, jobs_sorted[i])
-            c_matrix = calculate_makespan(queue_tmp, duration_matrix, order_matrix, machine_amount)
-            c_tmp = max([max([max(machines) for machines in job]) for job in c_matrix])
+            c_matrix, c_tmp = calculate_makespan(queue_tmp, len(job_list), machine_dict, start_date)
             if c_min > c_tmp:
                 queue_best = queue_tmp
                 c_min = c_tmp
         queue = queue_best
-    return queue, calculate_makespan(queue, duration_matrix, order_matrix, machine_amount)
+    return queue, calculate_makespan(queue, len(job_list), machine_dict, start_date)
 
 # Duration of job over all machines
 def calculate_job_makespan(job):
@@ -47,24 +31,48 @@ def insert(list, index, value):
     return _list
 
 # Calculate makespan of queue
-def calculate_makespan(queue, duration_matrix, order_matrix, machine_amount):
+def calculate_makespan(_queue, jobs_amount, machine_dict, start_date, previous_max=0):
     # TODO functional style
-    c_matrix = [[[0] * amount for amount in machine_amount] for job in queue]
-
+    queue = _queue.copy()
+    # Queue for the next day
+    queue_next_day = list()
+    # Machine amount
+    machine_amount = machine_dict[start_date.strftime("%Y-%m-%d")]
+    # Cost matrix
+    c_matrix = [[[0] * amount for amount in machine_amount] for job in range(jobs_amount)]
+    
     # TODO: too complicated ...
-    for job in queue:
-        machine = order_matrix[job][0]
-        operation_duration = duration_matrix[job][machine]
-        if operation_duration == 0: continue
-        previous_machine_duration = 0
-        fastest_machine_duration = min([max([_job[machine][m] for _job in c_matrix]) for m in range(machine_amount[machine])])
-        fastest_machine = np.argmin([max([_job[machine][m] for _job in c_matrix]) for m in range(machine_amount[machine])])
-        c_matrix[job][machine][fastest_machine] = max(previous_machine_duration, fastest_machine_duration) + operation_duration
-        for machine in order_matrix[job][1:]:
-            operation_duration = duration_matrix[job][machine]
+    for (job_id, job) in queue:
+        job_next_day = job.copy()
+        for machine in job.keys():
+            machine_id = int(machine[1:]) - 1
+            operation_duration = job[machine]
             if operation_duration == 0: continue
-            previous_machine_duration = max([max(machine) for machine in c_matrix[job]])
-            fastest_machine_duration = min([max([_job[machine][m] for _job in c_matrix]) for m in range(machine_amount[machine])])
-            fastest_machine = np.argmin([max([_job[machine][m] for _job in c_matrix]) for m in range(machine_amount[machine])])
-            c_matrix[job][machine][fastest_machine] = max(previous_machine_duration, fastest_machine_duration) + operation_duration
-    return c_matrix
+            if machine == next(iter(job)): previous_machine_duration = 0
+            else: previous_machine_duration = max([max(_machine) for _machine in c_matrix[job_id]])
+            fastest_machine_duration = min([max([_job[machine_id][m] for _job in c_matrix]) for m in range(machine_amount[machine_id])])
+            fastest_machine = np.argmin([max([_job[machine_id][m] for _job in c_matrix]) for m in range(machine_amount[machine_id])])
+            if max(previous_machine_duration, fastest_machine_duration) + operation_duration <= 24:
+                c_matrix[job_id][machine_id][fastest_machine] = max(previous_machine_duration, fastest_machine_duration) + operation_duration
+                del job_next_day[machine] # Or use slice_dictionary() in else?
+            else:
+                c_matrix[job_id][machine_id][fastest_machine] = 24
+                job_next_day[machine] = max(previous_machine_duration, fastest_machine_duration) + operation_duration - 24
+                queue_next_day.append((job_id, job_next_day))
+                break
+    c_max = max([max([max(machines) for machines in job]) for job in c_matrix]) + previous_max
+    c_matrix_total = [c_matrix]
+    if queue_next_day:
+        date_next_day = start_date + timedelta(days=1)
+        c_matrix_next_day, c_max_next_day = calculate_makespan(queue_next_day, jobs_amount, machine_dict, date_next_day, c_max)
+        c_matrix_total += c_matrix_next_day
+        c_max_total = c_max_next_day
+    else: c_max_total = c_max
+    return c_matrix_total, c_max_total
+
+def slice_dict(_dictionary, key_slice):
+    dictionary = _dictionary.copy()
+    for key in _dictionary:
+        if key == key_slice: return dictionary
+        del dictionary[key]
+    return dictionary
