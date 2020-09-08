@@ -1,13 +1,15 @@
 import neh
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def parse_machines(machine_string):
     return json.loads(machine_string)
 
 def parse_jobs(job_string):
     job_list = job_string.split('&')
-    return {job: json.loads(job_list[job]) for job in range(len(job_list))}
+    job_dict = {job: json.loads(job_list[job]) for job in range(len(job_list))}
+    job_dict_fetched = {job: {machine: timedelta(hours=job_dict[job][machine]) for machine in job_dict[job]} for job in job_dict}
+    return job_dict_fetched
 
 # Production start & end
 date_start = '2020-08-24'
@@ -26,7 +28,9 @@ machines = ('{"2020-08-31": [2, 2, 1], ' +
             '"2020-09-02": [2, 1, 1], ' +
             '"2020-09-03": [2, 2, 2], ' +
             '"2020-09-04": [1, 1, 1], ' +
-            '"2020-09-05": [5, 5, 5]}')
+            '"2020-09-05": [5, 5, 5], ' +
+            '"2020-09-06": [5, 5, 5], ' +
+            '"2020-09-07": [3, 3, 3]}')
 # List of jobs, each dict is a job, key = machine, value = duration
 jobs = ('{"M1": 18, "M2": 12, "M3": 24}' + '&' +
         '{"M1": 12, "M2": 18, "M3": 12}' + '&' +
@@ -34,8 +38,11 @@ jobs = ('{"M1": 18, "M2": 12, "M3": 24}' + '&' +
 
 machine_dict = parse_machines(machines)
 jobs = parse_jobs(jobs)
-# queue, c_matrix = neh.neh(jobs, machine_dict, datetime.strptime('2020-08-31', "%Y-%m-%d"))
-c_matrix, queue = neh.calculate_makespan(list(jobs.items()), 3, machine_dict, datetime.strptime('2020-08-31', "%Y-%m-%d"))
-print(queue)
-for matrix in c_matrix:
-    print(matrix)
+queue, c_matrix = neh.neh(jobs, machine_dict, datetime.strptime('2020-08-31 13:09', "%Y-%m-%d %H:%M"))
+# c_matrix, queue = neh.calculate_makespan(list(jobs.items()), 3, machine_dict, datetime.strptime('2020-08-31 13:09', "%Y-%m-%d %H:%M"))
+print('\n', c_matrix[1], '\n')
+print(queue, '\n')
+for matrix in c_matrix[0]:
+    for job in matrix:
+        print(job)
+    print()
