@@ -15,8 +15,6 @@ def parse_jobs(job_string):
 date_start = '2020-08-24'
 date_end = '2020-08-30'
 
-# Each index is a machine, the value represents the amount
-# machine_amount = [3, 2, 3]   # M1: 3, M2: 2, M3: 3
 # machine_amount = ('{"2020-08-31": [["2x2", "0x0", "x"], ["4x1", "2x1", "0x0"], ["2x2", "0x0", "x"]], ' +
                     # '"2020-09-01": [["2x2", "1x2", "x"], ["4x1", "2x1", "0x0"], ["2x2", "0x0", "x"]], ' +
                     # '"2020-09-02": [["2x2", "0x0", "x"], ["4x1", "2x1", "0x0"], ["2x2", "0x0", "x"]], ' +
