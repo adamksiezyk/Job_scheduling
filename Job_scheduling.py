@@ -41,8 +41,9 @@ queue, (c_matrix, duration) = neh.neh(jobs, machine_dict, datetime.strptime('202
 # c_matrix, queue = neh.calculate_makespan(list(jobs.items()), 3, machine_dict, datetime.strptime('2020-08-31 13:09', "%Y-%m-%d %H:%M"))
 print('\n', duration, '\n')
 print(queue, '\n')
-c = [[[[m.strftime("%Y-%m-%d %H:%M") for m in machine] for machine in job] for job in matrix] for matrix in c_matrix]
-for matrix in c:
+c = [(start_date, [[[m.strftime("%Y-%m-%d %H:%M") for m in machine] for machine in job] for job in matrix]) for (start_date, matrix) in c_matrix]
+for (start_date, matrix) in c:
+    print(start_date.strftime("%Y-%m-%d %H:%M"))
     for job in matrix:
         print(job)
     print()

@@ -70,7 +70,7 @@ def calculate_makespan(_queue, jobs_amount, machine_dict, start_date, previous_m
                 if c_max < next_shift(start_date) - start_date + previous_max: c_max = next_shift(start_date) - start_date + previous_max
                 break
 
-    c_matrix_total = [c_matrix]
+    c_matrix_total = [(start_date, c_matrix)]
 
     if queue_next_day:
         date_next_shift = next_shift(start_date)

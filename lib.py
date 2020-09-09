@@ -37,7 +37,7 @@ def get_column(col):
 def pipeline(data, functions):
     return functools.reduce(lambda ans, f: f(ans), functions, data)
 
-# Call
+# Init a function with one argument and call it with the second
 def call(function, argument):
     def apply_function(record):
         return list(function(argument, record))
