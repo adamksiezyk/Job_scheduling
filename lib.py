@@ -45,7 +45,8 @@ def call(function, argument):
 
 # Max of 2 dim matrix
 def max_2_dim(matrix):
-    return max(list(map(max, matrix)))
+    # return max(list(map(max, matrix)))
+    return max(max(matrix))
 
 # Max of 3 dim matrix
 def max_3_dim(matrix):
