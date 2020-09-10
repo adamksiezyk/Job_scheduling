@@ -1,5 +1,7 @@
 import neh
+import plot
 import json
+import pandas as pd
 from datetime import datetime, timedelta
 
 def parse_machines(machine_string):
@@ -7,7 +9,7 @@ def parse_machines(machine_string):
 
 def parse_jobs(job_string):
     job_list = job_string.split('&')
-    job_dict = {job: json.loads(job_list[job]) for job in range(len(job_list))}
+    job_dict = {'J' + str(job + 1): json.loads(job_list[job]) for job in range(len(job_list))}
     job_dict_fetched = {job: {machine: timedelta(hours=job_dict[job][machine]) for machine in job_dict[job]} for job in job_dict}
     return job_dict_fetched
 
@@ -41,9 +43,7 @@ queue, (c_matrix, duration) = neh.neh(jobs, machine_dict, datetime.strptime('202
 # c_matrix, queue = neh.calculate_makespan(list(jobs.items()), 3, machine_dict, datetime.strptime('2020-08-31 13:09', "%Y-%m-%d %H:%M"))
 print('\n', duration, '\n')
 print(queue, '\n')
-c = [(start_date, [[[m.strftime("%Y-%m-%d %H:%M") for m in machine] for machine in job] for job in matrix]) for (start_date, matrix) in c_matrix]
-for (start_date, matrix) in c:
-    print(start_date.strftime("%Y-%m-%d %H:%M"))
-    for job in matrix:
-        print(job)
-    print()
+with pd.option_context('display.max_rows', None):  # more options can be specified also
+    print(c_matrix.loc[c_matrix['Duration'] != timedelta(0)])
+
+plot.plot(c_matrix)

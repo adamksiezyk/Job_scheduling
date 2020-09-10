@@ -1,6 +1,7 @@
 import lib
 import functools
 import numpy as np
+import pandas as pd
 import copy
 from datetime import datetime, timedelta
 
@@ -35,7 +36,12 @@ def calculate_makespan(_queue, jobs_amount, machine_dict, start_date, previous_m
     # Machine amount
     machine_amount = fetch_machine_amount(machine_dict, start_date)
     # Cost matrix
-    c_matrix = [[[start_date] * amount for amount in machine_amount] for job in range(jobs_amount)]
+    instances = lib.flatten([list(range(1, amount + 1)) for amount in machine_amount])
+    machines = lib.flatten([['M' + str(machine_id + 1)] * machine_amount[machine_id] for machine_id in range(len(machine_amount))])
+    jobs = lib.flatten([[job_id] * len(instances) for (job_id, _) in queue])
+    arrays = [[start_date] * len(jobs), jobs, machines * len(queue), instances * len(queue)]
+    index = pd.MultiIndex.from_arrays(arrays=arrays, names=['Date', 'Job', 'Machine', 'Instance'])
+    c_matrix = pd.DataFrame(data=[[start_date] * 2] * len(jobs), index=index, columns=['Start', 'End'])
     # Max cost
     c_max = timedelta.min
     
@@ -51,11 +57,13 @@ def calculate_makespan(_queue, jobs_amount, machine_dict, start_date, previous_m
                 if c_max < next_shift(start_date) - start_date + previous_max: c_max = next_shift(start_date) - start_date + previous_max
                 break
             if machine == next(iter(job)): previous_machine_duration = start_date
-            else: previous_machine_duration = lib.max_2_dim(c_matrix[job_id])
-            fastest_machine_duration, fastest_machine = find_fastest_machine(c_matrix, machine_id)
-            operation_end = max(previous_machine_duration, fastest_machine_duration) + operation_duration
+            else: previous_machine_duration = max(c_matrix.loc[(start_date, job_id), 'End'])
+            fastest_machine_duration, fastest_machine = find_fastest_machine(c_matrix.loc[start_date], machine, machine_amount[machine_id])
+            operation_start = max(previous_machine_duration, fastest_machine_duration)
+            operation_end = operation_start + operation_duration
             if operation_end <= next_shift(start_date):
-                c_matrix[job_id][machine_id][fastest_machine] = operation_end
+                c_matrix.loc[(start_date, job_id, machine, fastest_machine), 'Start'] = operation_start
+                c_matrix.loc[(start_date, job_id, machine, fastest_machine), 'End'] = operation_end
                 if c_max < operation_end - start_date + previous_max: c_max = operation_end - start_date + previous_max
             elif fastest_machine_duration >= next_shift(start_date):
                 job_next_day = lib.slice_dict(job, machine)[1]
@@ -63,21 +71,22 @@ def calculate_makespan(_queue, jobs_amount, machine_dict, start_date, previous_m
                 if c_max < next_shift(start_date) - start_date + previous_max: c_max = next_shift(start_date) - start_date + previous_max
                 break
             else:
-                c_matrix[job_id][machine_id][fastest_machine] = next_shift(start_date)
+                c_matrix.loc[(start_date, job_id, machine, fastest_machine), 'Start'] = operation_start
+                c_matrix.loc[(start_date, job_id, machine, fastest_machine), 'End'] = next_shift(start_date)
                 job_next_day = lib.slice_dict(job, machine)[1]
                 job_next_day[machine] = operation_end - next_shift(start_date)
                 queue_next_day.append((job_id, job_next_day))
                 if c_max < next_shift(start_date) - start_date + previous_max: c_max = next_shift(start_date) - start_date + previous_max
                 break
 
-    c_matrix_total = [(start_date, c_matrix)]
-
+    c_matrix_total = c_matrix
     if queue_next_day:
         date_next_shift = next_shift(start_date)
         c_matrix_next_shift, c_max_next_shift = calculate_makespan(queue_next_day, jobs_amount, machine_dict, date_next_shift, c_max)
-        c_matrix_total += c_matrix_next_shift
+        c_matrix_total = c_matrix_total.append(c_matrix_next_shift)
         c_max_total = c_max_next_shift
     else: c_max_total = c_max
+    c_matrix_total['Duration'] = c_matrix_total['End'] - c_matrix_total['Start']
     return c_matrix_total, c_max_total
 
 def fetch_machine_amount(machine_dict, start_date):
@@ -87,22 +96,12 @@ def fetch_machine_amount(machine_dict, start_date):
     elif start_date.time() < THIRD_SHIFT: return lib.get_column(1)(machine_amount_day)
     else : return lib.get_column(2)(machine_amount_day)
 
-def find_fastest_machine(c_matrix, machine_id):
-    machine_amount = len(c_matrix[0][machine_id])
-    fastest_machine = functools.reduce( lambda a, m:
-                                            lib.append(a, max(lib.pipeline(c_matrix, [lib.get_column(machine_id), lib.get_column(m)]))),
-                                        range(machine_amount),
-                                        [])
-    return min(fastest_machine), np.argmin(fastest_machine)
+def find_fastest_machine(c_matrix, machine_id, machine_amount):
+    fastest_machine = [max(c_matrix.loc[(slice(None), machine_id, instance), 'End']) for instance in range(1, machine_amount + 1)]
+    return min(fastest_machine), np.argmin(fastest_machine) + 1
 
 def next_shift(start_date):
     if start_date.time() < FIRST_SHIFT: return datetime.combine(start_date.date(), FIRST_SHIFT)
     elif start_date.time() < SECOND_SHIFT: return datetime.combine(start_date.date(), SECOND_SHIFT)
     elif start_date.time() < THIRD_SHIFT: return datetime.combine(start_date.date(), THIRD_SHIFT)
     else : return datetime.combine(start_date.date() + timedelta(days=1), FIRST_SHIFT)
-
-# def postpone_job(job, machine, )
-
-# c = [[[18, 0], [24, 0], [0]], [[0, 12], [0, 24], [0]], [[0, 24], [0, 0], [0]]]
-# fastest_machine = find_fastest_machine(c, 0)
-# print(fastest_machine)
