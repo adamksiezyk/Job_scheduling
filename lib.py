@@ -50,12 +50,3 @@ def call(function, argument):
     def apply_function(record):
         return list(function(argument, record))
     return apply_function
-
-# Max of 2 dim matrix
-def max_2_dim(matrix):
-    # return max(list(map(max, matrix)))
-    return max(max(matrix))
-
-# Max of 3 dim matrix
-def max_3_dim(matrix):
-    return max(list(map(max_2_dim, matrix)))
