@@ -7,10 +7,12 @@ from datetime import datetime, timedelta
 def parse_machines(machine_string):
     machine_dict = json.loads(machine_string)
     machine_amount = {datetime.strptime(date, "%Y-%m-%d").date():
-                        [[0 if shift == 'x' else int(shift.split('x')[0]) for shift in machine] for machine in machine_dict[date]]
+                        [[0 if shift == 'x' else int(shift.split('x')[0]) for shift in machine]
+                        for machine in machine_dict[date]]
                         for date in machine_dict}
     workers_amount = {datetime.strptime(date, "%Y-%m-%d").date():
-                        [[0 if shift == 'x' else float(shift.split('x')[1]) for shift in machine] for machine in machine_dict[date]]
+                        [[0 if shift == 'x' else float(shift.split('x')[1]) for shift in machine]
+                        for machine in machine_dict[date]]
                         for date in machine_dict}
     return machine_amount, workers_amount
 
@@ -38,10 +40,11 @@ jobs = ('{"Zaginanie": {"M1": 18, "M2": 12, "M3": 24}, ' +
         '"Spawanie": {"M1": 12, "M2": 18, "M3": 12} ,' +
         '"Cynkowanie": {"M1": 24, "M2": 18, "M3": 18}}')
 
+start_date = datetime.strptime('2020-08-31 13:09', "%Y-%m-%d %H:%M")
+
 machine_dict, workers_dict = parse_machines(machines)
 jobs = parse_jobs(jobs)
-queue, (c_matrix, duration) = neh.neh(jobs, machine_dict, workers_dict, datetime.strptime('2020-08-31 13:09', "%Y-%m-%d %H:%M"))
-# c_matrix, queue = neh.calculate_makespan(list(jobs.items()), 3, machine_dict, datetime.strptime('2020-08-31 13:09', "%Y-%m-%d %H:%M"))
+queue, duration, c_matrix = neh.neh(jobs, machine_dict, workers_dict, start_date)
 print('\n', duration, '\n')
 print(queue, '\n')
 with pd.option_context('display.max_rows', None):  # more options can be specified also

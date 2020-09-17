@@ -28,12 +28,12 @@ def append(_list, element):
     return _list + [element]
 
 # Flatten a list
-def flatten(S):
-    if S == []:
-        return S
-    if isinstance(S[0], list):
-        return flatten(S[0]) + flatten(S[1:])
-    return S[:1] + flatten(S[1:])
+def flatten(s):
+    if s == []:
+        return s
+    if isinstance(s[0], list):
+        return flatten(s[0]) + flatten(s[1:])
+    return s[:1] + flatten(s[1:])
 
 # Get column of matrix
 def get_column(col):
