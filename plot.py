@@ -1,6 +1,7 @@
 def plot(c_matrix):
     import matplotlib.pyplot as plt
     import numpy as np
+    from neh import next_shift
     from datetime import datetime, timedelta
     filtered = c_matrix.loc[c_matrix['Duration'] != timedelta(0)]
     table = filtered[['Start', 'Duration']].xs(slice(None), level='Date')
@@ -22,7 +23,7 @@ def plot(c_matrix):
     ax.set_yticklabels(machines)
     ax.invert_yaxis()
     start = datetime.combine(c_matrix.index[0][0].date(), datetime.strptime('06:00', "%H:%M").time()) 
-    end = c_matrix.index[-1][0].date()
+    end = next_shift(c_matrix.index[-1][0])
     ax.set_xticks(np.arange(start, end, timedelta(hours=8)), minor=True)
     ax.set_xlabel('time')
     ax.grid(which='minor', alpha=0.2)

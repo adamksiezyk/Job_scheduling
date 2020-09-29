@@ -24,8 +24,15 @@ def insert(_list, index, value):
     return list_new
 
 # Append to list
-def append(_list, element):
-    return _list + [element]
+def append(first, second):
+    import copy
+    if isinstance(first, list):
+        if isinstance(second, list):
+            return first + second
+        return first + [second]
+    if isinstance(first, dict) and isinstance(second, dict):
+        tmp = copy.deepcopy(first)
+        return tmp.update(second)
 
 # Flatten a list
 def flatten(s):
