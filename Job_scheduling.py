@@ -1,4 +1,5 @@
 import lib
+import load_data
 import neh
 import plot
 import json
@@ -8,7 +9,8 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 
 def parse_machines(machine_string):
-    machine_dict = json.loads(machine_string)
+    # machine_dict = json.loads(machine_string)
+    machine_dict = ast.literal_eval(machine_string)
     machine_amount = {datetime.strptime(date, "%Y-%m-%d").date():
                         [[0 if shift == 'x' else int(shift.split('x')[0]) for shift in machine]
                         for machine in machine_dict[date]]
@@ -57,24 +59,26 @@ def schedule(job, machine_dict, workers_dict, start_date):
 date_start = '2020-08-24'
 date_end = '2020-08-30'
 # Dict of machines and workers key = date, value = list of machines, each machine consists of 3 shifts in format 2x1, 2-machines x 1-workers
-machines = ('{  "2020-08-31": [["2x2", "0x0", "x"], ["4x1", "2x1", "0x0"], ["2x2", "0x0", "x"]], ' +
-                '"2020-09-01": [["2x2", "1x2", "x"], ["4x1", "2x1", "0x0"], ["2x2", "0x0", "x"]], ' +
-                '"2020-09-02": [["2x2", "0x0", "x"], ["4x1", "2x1", "0x0"], ["2x2", "0x0", "x"]], ' +
-                '"2020-09-03": [["2x2", "0x0", "x"], ["4x1", "2x1", "0x0"], ["2x2", "0x0", "x"]], ' +
-                '"2020-09-04": [["2x2", "0x0", "x"], ["4x1", "2x1", "0x0"], ["2x2", "0x0", "x"]], ' +
-                '"2020-09-05": [["1x0.5", "0x0", "x"], ["1x1.5", "0x0", "0x0"], ["0x0", "0x0", "x"]], ' +
-                '"2020-09-06": [["5x3", "5x3", "5x3"], ["5x3", "5x3", "5x3"], ["5x3", "5x3", "5x3"]], ' +
-                '"2020-09-07": [["3x2", "3x2", "3x2"], ["3x2", "3x2", "3x2"], ["3x2", "3x2", "3x2"]]}')
+# machines = ('{  "2020-08-31": [["2x2", "0x0", "x"], ["4x1", "2x1", "0x0"], ["2x2", "0x0", "x"]], ' +
+#                 '"2020-09-01": [["2x2", "1x2", "x"], ["4x1", "2x1", "0x0"], ["2x2", "0x0", "x"]], ' +
+#                 '"2020-09-02": [["2x2", "0x0", "x"], ["4x1", "2x1", "0x0"], ["2x2", "0x0", "x"]], ' +
+#                 '"2020-09-03": [["2x2", "0x0", "x"], ["4x1", "2x1", "0x0"], ["2x2", "0x0", "x"]], ' +
+#                 '"2020-09-04": [["2x2", "0x0", "x"], ["4x1", "2x1", "0x0"], ["2x2", "0x0", "x"]], ' +
+#                 '"2020-09-05": [["1x0.5", "0x0", "x"], ["1x1.5", "0x0", "0x0"], ["0x0", "0x0", "x"]], ' +
+#                 '"2020-09-06": [["5x3", "5x3", "5x3"], ["5x3", "5x3", "5x3"], ["5x3", "5x3", "5x3"]], ' +
+#                 '"2020-09-07": [["3x2", "3x2", "3x2"], ["3x2", "3x2", "3x2"], ["3x2", "3x2", "3x2"]]}')
 
 # List of jobs, each dict is a job, key = machine, value = duration
-jobs = ('[[{"Zaginanie": {"M1": 18, "M2": 12, "M3": 24}, ' +
-        '"Spawanie": {"M1": 12, "M2": 18, "M3": 12}, ' +
-        '"Cynkowanie": {"M1": 24, "M2": 18, "M3": 18}}, ">", ' +
-        '{"Lakierowanie": {"M1": 18, "M2": 12, "M3": 24}}], ">", ' +
-        '{"Pakowanie": {"M1": 12, "M2": 18, "M3": 12}, ' +
-        '"Wysyłka": {"M1": 24, "M2": 18, "M3": 18}}]')
+# jobs = ('[[{"Zaginanie": {"M1": 18, "M2": 12, "M3": 24}, ' +
+#         '"Spawanie": {"M1": 12, "M2": 18, "M3": 12}, ' +
+#         '"Cynkowanie": {"M1": 24, "M2": 18, "M3": 18}}, ">", ' +
+#         '{"Lakierowanie": {"M1": 18, "M2": 12, "M3": 24}}], ">", ' +
+#         '{"Pakowanie": {"M1": 12, "M2": 18, "M3": 12}, ' +
+#         '"Wysyłka": {"M1": 24, "M2": 18, "M3": 18}}]')
 
-start_date = datetime.strptime('2020-08-31 13:09', "%Y-%m-%d %H:%M")
+# start_date = datetime.strptime('2020-08-31 13:09', "%Y-%m-%d %H:%M")
+
+jobs, machines, start_date = load_data.load_data('Linia_VA.xlsx', 'Linia VA')
 
 machine_dict, workers_dict = parse_machines(machines)
 jobs = parse_jobs(ast.literal_eval(jobs))
