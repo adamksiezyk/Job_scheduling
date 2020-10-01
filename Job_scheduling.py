@@ -35,8 +35,10 @@ def schedule(job, machine_dict, workers_dict, start_date):
         return neh.neh(job, machine_dict, workers_dict, date)
     elif isinstance(job, list):
         if job[1] == '&':
-            job_merged = lib.append(job[0], job[2])
-            return schedule(job_merged, machine_dict, workers_dict, date)
+            # TODO we assume the two jobs don't use the same machines!
+            result_0 = schedule(job[0], machine_dict, workers_dict, date)
+            result_2 = schedule(job[2], machine_dict, workers_dict, date)
+            return lib.append(result_0[0], result_2[0]), max(result_0[1], result_2[1]), result_0[2].append(result_2[2])
         elif job[1] == '>':
             result_0 = schedule(job[0], machine_dict, workers_dict, date)
             result_2 = schedule(job[2], machine_dict, workers_dict, date + result_0[1])
