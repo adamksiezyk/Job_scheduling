@@ -40,8 +40,8 @@ def calculate_makespan(queue, jobs_amount, machine_dict, workers_dict, start_dat
     # Worker amount
     workers_amount = fetch_machine_amount(workers_dict, start_date)
     # Cost matrix
-    instances = lib.flatten([list(range(1, amount + 1)) for amount in machine_amount])
-    machines = lib.flatten([['M' + str(machine_id + 1)] * machine_amount[machine_id] for machine_id in range(len(machine_amount))])
+    instances = lib.flatten([list(range(1, amount + 1)) for amount in machine_amount.values()])
+    machines = lib.flatten([[machine] * machine_amount[machine] for machine in machine_amount])
     jobs = lib.flatten([[job_id] * len(instances) for (job_id, _) in queue])
     arrays = [[start_date] * len(jobs), jobs, machines * len(queue), instances * len(queue)]
     index = pd.MultiIndex.from_arrays(arrays=arrays, names=['Date', 'Job', 'Machine', 'Instance'])
@@ -49,21 +49,20 @@ def calculate_makespan(queue, jobs_amount, machine_dict, workers_dict, start_dat
     
     # TODO: too complicated ...
     for (job_id, job) in queue:
-        for machine in job.keys():
-            machine_id = int(machine[1:]) - 1
+        for machine in job:
             operation_duration = job[machine]
             if not operation_duration: continue
-            if not machine_amount[machine_id] or not workers_amount[machine_id]:
+            if not machine_amount[machine] or not workers_amount[machine]:
                 job_next_day = lib.slice_dict(job, machine)[1]
                 queue_next_day.append((job_id, job_next_day))
                 break
-            operation_start, operation_end, fastest_machine = get_operation_details(c_matrix, job_id, job, machine, machine_amount[machine_id], workers_amount[machine_id], operation_duration, start_date)
+            operation_start, operation_end, fastest_machine = get_operation_details(c_matrix, job_id, job, machine, machine_amount[machine], workers_amount[machine], operation_duration, start_date)
             if operation_end > next_shift(start_date):
                 job_next_day = lib.slice_dict(job, machine)[1]
                 if operation_start < next_shift(start_date):
                     c_matrix.loc[(start_date, job_id, machine, fastest_machine), 'Start'] = operation_start
                     c_matrix.loc[(start_date, job_id, machine, fastest_machine), 'End'] = next_shift(start_date)
-                    job_next_day[machine] = (operation_end - next_shift(start_date)) * workers_amount[machine_id]
+                    job_next_day[machine] = (operation_end - next_shift(start_date)) * workers_amount[machine]
                 queue_next_day.append((job_id, job_next_day))
                 break
             c_matrix.loc[(start_date, job_id, machine, fastest_machine), 'Start'] = operation_start

@@ -12,12 +12,12 @@ def parse_machines(machine_string):
     # machine_dict = json.loads(machine_string)
     machine_dict = ast.literal_eval(machine_string)
     machine_amount = {datetime.strptime(date, "%Y-%m-%d").date():
-                        [[0 if shift == 'x' else int(shift.split('x')[0]) for shift in machine]
-                        for machine in machine_dict[date]]
+                        {machine: [0 if shift == 'x' else int(shift.split('x')[0]) for shift in machine_dict[date][machine]]
+                        for machine in machine_dict[date]}
                         for date in machine_dict}
     workers_amount = {datetime.strptime(date, "%Y-%m-%d").date():
-                        [[0 if shift == 'x' else float(shift.split('x')[1]) for shift in machine]
-                        for machine in machine_dict[date]]
+                        {machine: [0 if shift == 'x' else float(shift.split('x')[1]) for shift in machine_dict[date][machine]]
+                        for machine in machine_dict[date]}
                         for date in machine_dict}
     return machine_amount, workers_amount
 

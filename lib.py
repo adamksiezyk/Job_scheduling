@@ -32,7 +32,8 @@ def append(first, second):
         return first + [second]
     if isinstance(first, dict) and isinstance(second, dict):
         tmp = copy.deepcopy(first)
-        return tmp.update(second)
+        tmp.update(second)
+        return tmp
 
 # Flatten a list
 def flatten(s):
@@ -45,7 +46,9 @@ def flatten(s):
 # Get column of matrix
 def get_column(col):
     def inner(matrix):
-        return functools.reduce(lambda ans, row: append(ans, row[col]), matrix, [])
+        if isinstance(matrix, list):
+            return functools.reduce(lambda ans, row: append(ans, row[col]), matrix, [])
+        return functools.reduce(lambda ans, row: append(ans, {row: matrix[row][col]}), matrix, {})
     return inner
 
 # Run each function on data
