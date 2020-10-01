@@ -31,7 +31,7 @@ def neh(job_list, machine_dict, workers_dict, start_date):
     return queue, c_max, c_matrix
 
 # Calculate makespan of queue
-def calculate_makespan(queue, jobs_amount, machine_dict, workers_dict, start_date):
+def calculate_makespan(queue, jobs_amount, machine_dict, workers_dict, start_date, c_matrix_parallel_job=None):
     # TODO functional style
     # Queue for the next day
     queue_next_day = list()
@@ -86,7 +86,8 @@ def fetch_machine_amount(machine_dict, start_date):
 def get_previous_machine_duration(c_matrix, machine, first_machine, job_id, start_date):
     return start_date if machine == first_machine else max(c_matrix.loc[(start_date, job_id), 'End'])
 
-def get_fastest_machine(c_matrix, machine_id, machine_amount):
+def get_fastest_machine(c_matrix, machine_id, machine_amount, c_matrix_parallel_job=None):
+    # TODO check c_matrix_parallel_job if machine is available for the given slot
     fastest_machine = [max(c_matrix.loc[(slice(None), machine_id, instance), 'End']) for instance in range(1, machine_amount + 1)]
     return min(fastest_machine), np.argmin(fastest_machine) + 1
 
