@@ -1,8 +1,13 @@
 import functools
+from datetime import timedelta
 
 # Sum dictionary values
-def sum_dict_val(_dict, init_val):
-    return functools.reduce(lambda sum, key: sum + _dict[key], _dict, init_val)
+def sum_dict_val(_dict, init_val=timedelta(0)):
+    if isinstance(_dict, dict):
+        return functools.reduce(lambda sum, key: sum + _dict[key], _dict, init_val)
+    elif isinstance(_dict, list):
+        return functools.reduce(lambda sum, elem: sum + sum_dict_val(elem), _dict, init_val)
+    return init_val
 
 def delelte(_dictionary, key):
     import copy
@@ -27,9 +32,12 @@ def insert(_list, index, value):
 def append(first, second):
     import copy
     if isinstance(first, list):
-        if isinstance(second, list):
-            return first + second
         return first + [second]
+
+def merge(first, second):
+    import copy
+    if isinstance(first, list) and isinstance(second, list):
+        return first + second
     if isinstance(first, dict) and isinstance(second, dict):
         tmp = copy.deepcopy(first)
         tmp.update(second)
@@ -48,7 +56,7 @@ def get_column(col):
     def inner(matrix):
         if isinstance(matrix, list):
             return functools.reduce(lambda ans, row: append(ans, row[col]), matrix, [])
-        return functools.reduce(lambda ans, row: append(ans, {row: matrix[row][col]}), matrix, {})
+        return functools.reduce(lambda ans, row: merge(ans, {row: matrix[row][col]}), matrix, {})
     return inner
 
 # Run each function on data

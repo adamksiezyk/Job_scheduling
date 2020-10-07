@@ -22,16 +22,17 @@ def parse_machines(machine_string):
                         for date in machine_dict}
     return machine_amount, workers_amount
 
-def parse_jobs(job_list):
-    result = []
-    for job in job_list:
-        if isinstance(job, list): result.append(parse_jobs(job))
-        elif job == '>' or job == '&': result.append(job)
-        elif isinstance(job, dict):
-            result.append({job_id: parse_machines_in_job(machines)
-                            for job_id, machines in job.items()})
-        else: raise RuntimeError('Wrong job format')
-    return result
+def parse_jobs(jobs):
+    if isinstance(jobs, list):
+        return functools.reduce(
+            lambda ans, job: lib.append(ans, parse_jobs(job)),
+            jobs,
+            [])
+    elif jobs == '>' or jobs == '&': return jobs
+    elif isinstance(jobs, dict):
+        return {job_id: parse_machines_in_job(machines)
+                    for job_id, machines in jobs.items()}
+    else: raise RuntimeError('Wrong jobs format')
 
 # TODO fix
 def parse_machines_in_job(machines):
@@ -44,6 +45,7 @@ def parse_machines_in_job(machines):
     elif isinstance(machines, dict):
         return {machine: timedelta(hours=time)
             for machine, time in machines.items()}
+    else: raise RuntimeError('Wrong machines format')
 
 def schedule(job, machine_dict, workers_dict, start_date):
     date = deepcopy(start_date)
@@ -54,11 +56,13 @@ def schedule(job, machine_dict, workers_dict, start_date):
             # TODO we assume the two jobs don't use the same machines!
             result_0 = schedule(job[0], machine_dict, workers_dict, date)
             result_2 = schedule(job[2], machine_dict, workers_dict, date)
-            return lib.append(result_0[0], result_2[0]), max(result_0[1], result_2[1]), result_0[2].append(result_2[2])
+            c_matrix = result_0[2].append(result_2[2])
+            return lib.append(result_0[0], result_2[0]), max(result_0[1], result_2[1]), c_matrix
         elif job[1] == '>':
             result_0 = schedule(job[0], machine_dict, workers_dict, date)
             result_2 = schedule(job[2], machine_dict, workers_dict, date + result_0[1])
-            return lib.append(result_0[0], result_2[0]), result_0[1] + result_2[1], result_0[2].append(result_2[2])
+            c_matrix = result_0[2].append(result_2[2])
+            return lib.append(result_0[0], result_2[0]), result_0[1] + result_2[1], c_matrix
     else:
         raise RuntimeError('Wrong jobs format.')
 

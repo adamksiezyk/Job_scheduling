@@ -69,16 +69,24 @@ def calculate_makespan(queue, machine_dict, workers_dict, start_date):
                     break
                 c_matrix.loc[(start_date, job_id, machine, fastest_machine), 'Start'] = operation_start
                 c_matrix.loc[(start_date, job_id, machine, fastest_machine), 'End'] = operation_end
+
         elif isinstance(job, list):
             if job[1] == '&':
                 # TODO we assume the two jobs don't use the same machines!
-                result_0 = calculate_makespan([(job_id, job[0])], machine_dict, workers_dict, start_date)
-                result_2 = calculate_makespan([(job_id, job[2])], machine_dict, workers_dict, start_date)
-                return lib.append(result_0[0], result_2[0]), max(result_0[1], result_2[1]), result_0[2].append(result_2[2])
+                result_0 = calculate_makespan(
+                    [(job_id, job[0])], machine_dict, workers_dict, start_date)
+                result_2 = calculate_makespan(
+                    [(job_id, job[2])], machine_dict, workers_dict, start_date)
+                result_0 = result_0.append(result_2)
+                c_matrix = c_matrix.append(result_0)
             elif job[1] == '>':
-                result_0 = calculate_makespan([(job_id, job[0])], machine_dict, workers_dict, start_date)
-                result_2 = calculate_makespan([(job_id, job[2])], machine_dict, workers_dict, start_date + result_0[1])
-                return lib.append(result_0[0], result_2[0]), result_0[1] + result_2[1], result_0[2].append(result_2[2])
+                result_0 = calculate_makespan(
+                    [(job_id, job[0])], machine_dict, workers_dict, start_date)
+                end_date = start_date if result_0.empty else max(result_0['End'])
+                result_2 = calculate_makespan(
+                    [(job_id, job[2])], machine_dict, workers_dict, end_date)
+                result_0 = result_0.append(result_2)
+                c_matrix = c_matrix.append(result_0)
         else:
             raise RuntimeError('Wrong jobs format.')
 
@@ -88,7 +96,7 @@ def calculate_makespan(queue, machine_dict, workers_dict, start_date):
         date_next_shift = next_shift(start_date)
         c_matrix_next_shift = calculate_makespan(queue_next_day, machine_dict, workers_dict, date_next_shift)
         c_matrix_total = c_matrix_total.append(c_matrix_next_shift)
-    return c_matrix_total
+    return c_matrix_total.loc[c_matrix_total['Duration'] != timedelta(0)]
 
 def fetch_machine_amount(machine_dict, start_date):
     machine_amount_day = machine_dict[start_date.date()]
