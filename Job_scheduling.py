@@ -4,6 +4,7 @@ import neh
 import plot
 import json
 import ast
+import functools
 import pandas as pd
 from copy import deepcopy
 from datetime import datetime, timedelta
@@ -25,9 +26,24 @@ def parse_jobs(job_list):
     result = []
     for job in job_list:
         if isinstance(job, list): result.append(parse_jobs(job))
-        elif job == '>' or job == '&':  result.append(job)
-        else: result.append({_job: {machine: timedelta(hours=job[_job][machine]) for machine in job[_job]} for _job in job})
+        elif job == '>' or job == '&': result.append(job)
+        elif isinstance(job, dict):
+            result.append({job_id: parse_machines_in_job(machines)
+                            for job_id, machines in job.items()})
+        else: raise RuntimeError('Wrong job format')
     return result
+
+# TODO fix
+def parse_machines_in_job(machines):
+    if isinstance(machines, list):
+        return functools.reduce(
+            lambda ans, machine: lib.append(ans, parse_machines_in_job(machine)),
+            machines,
+            [])
+    elif machines == '&' or machines == '>': return machines
+    elif isinstance(machines, dict):
+        return {machine: timedelta(hours=time)
+            for machine, time in machines.items()}
 
 def schedule(job, machine_dict, workers_dict, start_date):
     date = deepcopy(start_date)
