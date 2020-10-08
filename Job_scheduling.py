@@ -34,7 +34,6 @@ def parse_jobs(jobs):
                     for job_id, machines in jobs.items()}
     else: raise RuntimeError('Wrong jobs format')
 
-# TODO fix
 def parse_machines_in_job(machines):
     if isinstance(machines, list):
         return functools.reduce(
