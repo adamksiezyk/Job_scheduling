@@ -41,12 +41,15 @@ def calculate_makespan(queue, machine_dict, workers_dict, start_date=datetime.mi
     machine_amount = fetch_machine_amount(machine_dict, start_date)
     # Worker amount
     workers_amount = fetch_machine_amount(workers_dict, start_date)
+    
     # Cost matrix
+    # Index
     instances = lib.flatten([list(range(1, amount + 1)) for amount in machine_amount.values()])
     machines = lib.flatten([[machine] * machine_amount[machine] for machine in machine_amount])
     jobs = lib.flatten([[job_id] * len(instances) for (job_id, _), __ in queue])
     arrays = [[start_date] * len(jobs), jobs, machines * len(queue), instances * len(queue)]
     index = pd.MultiIndex.from_arrays(arrays=arrays, names=['Date', 'Job', 'Machine', 'Instance'])
+    # Blank matrix
     c_matrix_init = pd.DataFrame(data=[[start_date] * 2] * len(jobs), index=index, columns=['Start', 'End'])
     c_matrix_init['Duration'] = c_matrix_init['End'] - c_matrix_init['Start']
     c_matrix = c_matrix_old.append(c_matrix_init)
@@ -80,7 +83,6 @@ def calculate_makespan(queue, machine_dict, workers_dict, start_date=datetime.mi
 
         elif isinstance(job, list):
             if job[1] == '&':
-                # TODO we assume the two jobs don't use the same machines!
                 result_0 = calculate_makespan(
                     [((job_id, job_start_date), job[0])], machine_dict, workers_dict, start_date,
                     c_matrix.loc[c_matrix.Duration.ne(timedelta(0))])
@@ -118,8 +120,7 @@ def get_fastest_machine(c_matrix, machine_id, machine_amount):
     return min(fastest_machine), np.argmin(fastest_machine) + 1
 
 def get_operation_details(c_matrix, job_id, machines, machine, machine_amount, workers_amount, operation_duration, start_date):
-    # previous_machine = machines[machines.index(machine) - 1] if machines.index(machine) else 0
-    previous_machine_duration = max(c_matrix.loc[(slice(None), job_id, machines), 'End']) #if previous_machine else start_date
+    previous_machine_duration = max(c_matrix.loc[(slice(None), job_id, machines), 'End'])
     fastest_machine_duration, fastest_machine = get_fastest_machine(c_matrix, machine, machine_amount)
     operation_start = max(previous_machine_duration, fastest_machine_duration)
     operation_end = operation_start + operation_duration / workers_amount
