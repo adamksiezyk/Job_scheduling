@@ -30,8 +30,8 @@ def parse_jobs(jobs):
             [])
     elif jobs == '>' or jobs == '&': return jobs
     elif isinstance(jobs, dict):
-        return {job_id: parse_machines_in_job(machines)
-                    for job_id, machines in jobs.items()}
+        return {(job_id, datetime.strptime(job_start, "%Y-%m-%d %H:%M:%S")): parse_machines_in_job(machines)
+                    for (job_id, job_start), machines in jobs.items()}
     else: raise RuntimeError('Wrong jobs format')
 
 def parse_machines_in_job(machines):
@@ -46,21 +46,20 @@ def parse_machines_in_job(machines):
             for machine, time in machines.items()}
     else: raise RuntimeError('Wrong machines format')
 
-def schedule(job, machine_dict, workers_dict, start_date):
-    date = deepcopy(start_date)
+def schedule(job, machine_dict, workers_dict, start_date, c_matrix_old=pd.DataFrame()):
     if isinstance(job, dict):
-        return neh.neh(job, machine_dict, workers_dict, date)
+        return neh.neh(job, machine_dict, workers_dict, start_date, c_matrix_old)
     elif isinstance(job, list):
         if job[1] == '&':
             # TODO we assume the two jobs don't use the same machines!
-            result_0 = schedule(job[0], machine_dict, workers_dict, date)
-            result_2 = schedule(job[2], machine_dict, workers_dict, date)
-            c_matrix = result_0[2].append(result_2[2])
+            result_0 = schedule(job[0], machine_dict, workers_dict, start_date)
+            result_2 = schedule(job[2], machine_dict, workers_dict, start_date, result_0[2])
+            c_matrix = result_2[2]
             return lib.append(result_0[0], result_2[0]), max(result_0[1], result_2[1]), c_matrix
         elif job[1] == '>':
-            result_0 = schedule(job[0], machine_dict, workers_dict, date)
-            result_2 = schedule(job[2], machine_dict, workers_dict, date + result_0[1])
-            c_matrix = result_0[2].append(result_2[2])
+            result_0 = schedule(job[0], machine_dict, workers_dict, start_date)
+            result_2 = schedule(job[2], machine_dict, workers_dict, start_date + result_0[1], result_0[2])
+            c_matrix = result_2[2]
             return lib.append(result_0[0], result_2[0]), result_0[1] + result_2[1], c_matrix
     else:
         raise RuntimeError('Wrong jobs format.')
@@ -103,9 +102,13 @@ jobs, machines, start_date = load_data.load_data('Linia_VA.xlsx', 'Linia VA')
 
 machine_dict, workers_dict = parse_machines(machines)
 jobs = parse_jobs(ast.literal_eval(jobs))
+import time
+t1 = time.time()
 queue, duration, c_matrix = schedule(jobs, machine_dict, workers_dict, start_date)
+t2 = time.time()
 print('\n', queue, '\n')
 print(duration, '\n')
 with pd.option_context('display.max_rows', None):  # more options can be specified also
-    print(c_matrix.loc[c_matrix['Duration'] != timedelta(0)])
+    print(c_matrix.loc[c_matrix.Duration.ne(timedelta(0))])
 plot.plot(c_matrix)
+print(t2-t1)

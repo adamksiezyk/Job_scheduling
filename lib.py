@@ -68,3 +68,15 @@ def call(function, argument):
     def apply_function(record):
         return list(function(argument, record))
     return apply_function
+
+# Measure function execution time
+def timer(func):
+    def wrapper(*arg, **kw):
+        import time
+        t1 = time.time()
+        res = func(*arg, **kw)
+        t2 = time.time()
+
+        print(func.__name__, ': ', t2 - t1)
+        return res
+    return wrapper
