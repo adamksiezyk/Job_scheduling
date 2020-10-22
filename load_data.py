@@ -24,6 +24,7 @@ def load_data(path, sheet_name):
     machines = {start_date + timedelta(days=delta): {
         machine: ["3x1", "3x1", "3x1"] for machine in col[3:]} for delta in range(365)}
     # Every project can be run parallel
+    jobs = sorted(jobs, key=lambda job: list(job.keys())[0][1])
     jobs = functools.reduce(lambda ans, job: [ans, "&", job], jobs[2:], [
         jobs[0], "&", jobs[1]])
     return jobs, machines, start_date
