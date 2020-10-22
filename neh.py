@@ -13,6 +13,7 @@ def neh(job_list, machine_dict, workers_dict, start_date, c_matrix_old=pd.DataFr
     # TODO functional style
 
     queue = list()
+    # TODO sort from fastest start
     # Sort the job list from longest to shortest duration
     jobs_sorted = sorted(job_list.items(), key=lambda job: lib.sum_dict_val(job[1]), reverse=True)
     queue.append(jobs_sorted[0])
