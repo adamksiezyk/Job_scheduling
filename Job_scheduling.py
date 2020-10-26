@@ -85,27 +85,29 @@ def schedule(job, machine_dict, workers_dict, start_date, c_matrix_old=pd.DataFr
         raise RuntimeError('Wrong jobs format.')
 
 
-jobs, machines, start_date = load_data.load_data('Linia_VA.xlsx', 'Linia VA')
+if __name__ == '__main__':
+    jobs, machines, start_date = load_data.load_data(
+        'Linia_VA_2.xlsx', 'Linia VA')
 
-# Load machines and workers dict
-machine_dict, workers_dict = parse_machines(machines)
-# Load jobs
-jobs = parse_jobs(jobs)
-# Benchmark exec. time
-t1 = time.time()
-# Schedule jobs
-queue, duration, c_matrix = schedule(
-    jobs, machine_dict, workers_dict, start_date)
-t2 = time.time()
-# Print optimal queue
-# print('\n', queue, '\n')
-# Print whole project duration
-print(duration, '\n')
-# Display the c_matrix
-# with pd.option_context('display.max_rows', None):  # more options can be specified also
-# print(c_matrix)
-c_matrix.to_excel("output.xlsx")
-# Plot the schedule
-# plot.plot(c_matrix)
-# Display exec. time
-print('\n', t2-t1)
+    # Load machines and workers dict
+    machine_dict, workers_dict = parse_machines(machines)
+    # Load jobs
+    jobs = parse_jobs(jobs)
+    # Benchmark exec. time
+    t1 = time.time()
+    # Schedule jobs
+    queue, duration, c_matrix = schedule(
+        jobs, machine_dict, workers_dict, start_date)
+    t2 = time.time()
+    # Print optimal queue
+    # print('\n', queue, '\n')
+    # Print whole project duration
+    print(duration, '\n')
+    # Display the c_matrix
+    # with pd.option_context('display.max_rows', None):  # more options can be specified also
+    # print(c_matrix)
+    c_matrix.to_excel("output.xlsx")
+    # Plot the schedule
+    # plot.plot(c_matrix)
+    # Display exec. time
+    print('\n', t2-t1)
