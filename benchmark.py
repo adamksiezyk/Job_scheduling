@@ -21,7 +21,7 @@ def run(amount):
 
 
 # Benchmark
-amount = 5
+amount = 20
 x = range(1, amount + 1)
 y = []
 for n in x:

@@ -106,8 +106,8 @@ if __name__ == '__main__':
     # Display the c_matrix
     # with pd.option_context('display.max_rows', None):  # more options can be specified also
     # print(c_matrix)
-    # c_matrix.to_excel("output.xlsx")
+    c_matrix.to_excel("output.xlsx")
     # Plot the schedule
-    plot.plot(c_matrix)
+    # plot.plot(c_matrix)
     # Display exec. time
     print('\n', t2-t1)
