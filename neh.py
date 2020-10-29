@@ -21,26 +21,26 @@ def neh(job_list, machine_dict, workers_dict, start_date, c_matrix_old=pd.DataFr
         job_list.items(), key=lambda job: job[0][1], reverse=True)
     queue.append(jobs_sorted[0])
     for i in range(1, len(job_list)):
-        queue_best = None
-        c_min = pd.Timedelta.max
         # Run each permutation on different thread
-        with concurrent.futures.ThreadPoolExecutor(max_workers=255) as executor:
-            for j in range(i + 1):
-                queue_tmp = lib.insert(queue, j, jobs_sorted[i])
-                thread = executor.submit(calculate_makespan,
-                                         *(queue_tmp, machine_dict, workers_dict, start_date, c_matrix_old))
-                c_matrix = thread.result()
-                c_tmp = get_c_max(start_date, c_matrix)
-                if c_min > c_tmp:
-                    queue_best = queue_tmp
-                    c_min = c_tmp
-        queue = queue_best
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            processes = [executor.submit(calculate_queue, queue, jobs_sorted[i], j, machine_dict,
+                                         workers_dict, start_date, c_matrix_old) for j in range(i + 1)]
+            results = [process.result()
+                       for process in concurrent.futures.as_completed(processes)]
+        queue = min(results, key=lambda result: result[0])[1]
     c_matrix = calculate_makespan(
         queue, machine_dict, workers_dict, start_date, c_matrix_old)
     c_max = get_c_max(start_date, c_matrix)
     return queue, c_max, c_matrix
 
 # Calculate makespan of queue
+
+
+def calculate_queue(queue, job, j, machine_dict, workers_dict, start_date, c_matrix_old):
+    queue_tmp = lib.insert(queue, j, job)
+    c_matrix = calculate_makespan(
+        queue_tmp, machine_dict, workers_dict, start_date, c_matrix_old)
+    return get_c_max(start_date, c_matrix), queue_tmp
 
 
 def calculate_makespan(queue, machine_dict, workers_dict, start_date=datetime.min, c_matrix_old=pd.DataFrame()):
