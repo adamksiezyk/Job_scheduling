@@ -56,8 +56,8 @@ def parse_machines_in_job(machines):
     elif machines == '&' or machines == '>':
         return machines
     elif isinstance(machines, dict):
-        return {machine: timedelta(hours=time)
-                for machine, time in machines.items()}
+        return {machine: (timedelta(hours=time), delay)
+                for machine, (time, delay) in machines.items()}
     else:
         raise RuntimeError('Wrong machines format')
 
@@ -87,7 +87,7 @@ def schedule(job, machine_dict, workers_dict, start_date, c_matrix_old=pd.DataFr
 
 if __name__ == '__main__':
     jobs, machines, start_date = load_data.load_data(
-        'Linia_VA_2.xlsx', 'Linia VA', 10)
+        'Linia_VA_2.xlsx', 'Linia VA', 5)
 
     # Load machines and workers dict
     machine_dict, workers_dict = parse_machines(machines)
@@ -108,6 +108,6 @@ if __name__ == '__main__':
     # print(c_matrix)
     c_matrix.to_excel("output.xlsx")
     # Plot the schedule
-    # plot.plot(c_matrix)
+    plot.plot(c_matrix)
     # Display exec. time
     print('\n', t2-t1)

@@ -80,3 +80,25 @@ def timer(func):
         print(func.__name__, ': ', t2 - t1)
         return res
     return wrapper
+
+def next_weekday(date, weekday):
+    # Input:
+    #   - date - datetime date
+    #   - weekday: 0 = Monday, 1=Tuesday, 2=Wednesday...
+    # Output:
+    #   - next weekday date
+    from datetime import datetime, time, timedelta
+    days_ahead = weekday - date.weekday()
+    if days_ahead <= 0: # Target day already happened this week
+        days_ahead += 7
+    return datetime.combine(date.date() + timedelta(days_ahead), time(hour=6))
+
+def next_n_days(date, n):
+    # Input:
+    #   - date - datetime date
+    #   - n - days amount
+    # Output:
+    #   - date + n days morning
+    if not n: return date
+    from datetime import timedelta, datetime, time
+    return datetime.combine(date.date() + timedelta(days=n), time(hour=6))
