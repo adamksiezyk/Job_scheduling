@@ -1,27 +1,49 @@
-def load_data(path, sheet_name, amount=None):
-    import functools
+def load_data(path_jobs, sheet_name_jobs, path_resources, sheet_name_resources, amount=None):
+
+    # Load jobs
+    jobs = load_jobs(path_jobs, sheet_name_jobs, amount)
+
+    # Machines and workers availability, fixed for now
+    resources = load_resources(path_resources, sheet_name_resources)
+    return jobs, resources
+
+
+def load_jobs(path, sheet_name, amount):
     import pandas as pd
-    from datetime import datetime, timedelta
+    from datetime import datetime, time
 
     data = pd.read_excel(path, sheet_name=sheet_name)
-
-    # Load first 10 jobs
-    jobs = {}
     amount = amount if amount else len(data)
-    for i in range(amount):
-        dat = data.iloc[i]
+    jobs = {}
+    for i in range(len(data)):
+        row = data.iloc[i]
         col = data.columns
         # Take only recent jobs, not too old and don't go to far to the future
-        if dat[col[1]] > pd.Timestamp(year=2020, month=1, day=1):
+        if row[col[1]] >= pd.Timestamp(year=2020, month=11, day=12):
             # Rearrange them to fit the desired machine scheduling pattern pattern
-            date = dat[col[1]].to_pydatetime()
-            jobs[(dat[col[0]], date)] = [[{col[3]: (dat[col[3]], '0d'), col[4]: (dat[col[4]], '1d')}, "&",
-                                          {col[5]: (dat[col[5]], '0d'), col[6]: (dat[col[6]], '1d')}], ">",
-                                         {col[7]: (dat[col[7]], '1t'), col[8]: (dat[col[8]], '2d'), col[9]: (dat[col[9]], '2d'), col[10]: (dat[col[10]], '0d')}]
-    # Scheduling start
-    start_date = min(data.loc[data['Start produkcji WT'] > pd.Timestamp(
-        year=2020, month=1, day=1)]['Start produkcji WT'])
-    # Machines and workers availability, fixed for now
-    machines = {start_date + timedelta(days=delta): {
-        machine: ["3x1", "3x1", "3x1"] for machine in col[3:]} for delta in range(730)}
-    return jobs, machines, start_date
+            date = datetime.combine(row[col[1]].date(), time(hour=6))
+            jobs[(row[col[0]], date)] = [[{col[3]: (row[col[3]], '0d'), col[4]: (row[col[4]], '1d')}, "&",
+                                          {col[5]: (row[col[5]], '0d'), col[6]: (row[col[6]], '1d')}], ">",
+                                         {col[7]: (row[col[7]], '1t'), col[8]: (row[col[8]], '2d'), col[9]: (row[col[9]], '2d'), col[10]: (row[col[10]], '0d')}]
+        if len(jobs) == amount:
+            break
+    return jobs
+
+
+def load_resources(path, sheet_name):
+    import pandas as pd
+
+    data = pd.read_excel(path, sheet_name)
+    col = data.columns
+    resources = {}
+    for i in range(0, len(data), 3):
+        resources[data.iloc[i][col[0]].date()] = {
+            machine: [data.iloc[i][machine], data.iloc[i+1]
+                      [machine], data.iloc[i+2][machine]]
+            for machine in col[2:-1]
+        }
+    return resources
+
+
+if __name__ == '__main__':
+    load_resources('WorkCalendar.xlsx', 'Sheet1')

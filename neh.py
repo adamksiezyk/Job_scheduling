@@ -48,7 +48,7 @@ def calculate_makespan(queue, machine_dict, workers_dict, start_date=datetime.mi
     job_start_date = min([job_start for (job_id, job_start), job in queue])
     start_date = job_start_date if job_start_date > start_date else start_date
     # Queue for the next day
-    queue_next_day = list()
+    queue_next_shift = list()
     # Machine amount
     machine_amount = fetch_machine_amount(machine_dict, start_date)
     # Worker amount
@@ -83,7 +83,8 @@ def calculate_makespan(queue, machine_dict, workers_dict, start_date=datetime.mi
                     continue
                 if not machine_amount[machine] or not workers_amount[machine]:
                     job_next_day = lib.slice_dict(job, machine)[1]
-                    queue_next_day.append((job_id, job_next_day))
+                    queue_next_shift.append(
+                        ((job_id, job_start_date), job_next_day))
                     break
                 operation_start, operation_end, fastest_machine = get_operation_details(
                     c_matrix, job_id, list(
@@ -101,7 +102,7 @@ def calculate_makespan(queue, machine_dict, workers_dict, start_date=datetime.mi
                         job_next_day[machine] = ((
                             operation_end - next_shift(start_date)) * workers_amount[machine], '0d')
                     job_next_day[machine] = (job_next_day[machine][0], '0d')
-                    queue_next_day.append(
+                    queue_next_shift.append(
                         ((job_id, operation_start), job_next_day))
                     break
                 c_matrix.loc[(start_date, job_id, machine,
@@ -133,9 +134,9 @@ def calculate_makespan(queue, machine_dict, workers_dict, start_date=datetime.mi
         else:
             raise RuntimeError('Wrong jobs format.')
 
-    if queue_next_day:
+    if queue_next_shift:
         date_next_shift = next_shift(start_date)
-        c_matrix_next_shift = calculate_makespan(queue_next_day, machine_dict, workers_dict,
+        c_matrix_next_shift = calculate_makespan(queue_next_shift, machine_dict, workers_dict,
                                                  date_next_shift, c_matrix.loc[c_matrix.Duration.ne(timedelta(0))])
         return c_matrix_next_shift.loc[c_matrix_next_shift.Duration.ne(timedelta(0))]
     return c_matrix.loc[c_matrix.Duration.ne(timedelta(0))]
@@ -164,7 +165,8 @@ def get_operation_details(c_matrix, job_id, machines, machine, machine_amount, w
         c_matrix.loc[(slice(None), job_id, machines), 'End'])
     fastest_machine_duration, fastest_machine = get_fastest_machine(
         c_matrix, machine, machine_amount)
-    operation_start = parse_delay(max(previous_machine_duration, fastest_machine_duration), delay)
+    operation_start = parse_delay(
+        max(previous_machine_duration, fastest_machine_duration), delay)
     operation_end = operation_start + operation_duration / workers_amount
     return operation_start, operation_end, fastest_machine
 
@@ -182,6 +184,7 @@ def next_shift(start_date):
         return datetime.combine(start_date.date(), THIRD_SHIFT)
     else:
         return datetime.combine(start_date.date() + timedelta(days=1), FIRST_SHIFT)
+
 
 def parse_delay(date, delay):
     if delay[-1].lower() == 'd':

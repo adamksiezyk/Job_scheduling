@@ -16,11 +16,11 @@ from datetime import datetime, timedelta
 def parse_machines(machine_dict):
     # machine_string_format = machine_string.replace("'", '"')
     # machine_dict = json.loads(machine_string_format)
-    machine_amount = {date.date():
+    machine_amount = {date:
                       {machine: [0 if shift == 'x' else int(shift.split('x')[0]) for shift in machine_dict[date][machine]]
                        for machine in machine_dict[date]}
                       for date in machine_dict}
-    workers_amount = {date.date():
+    workers_amount = {date:
                       {machine: [0 if shift == 'x' else float(shift.split('x')[1]) for shift in machine_dict[date][machine]]
                        for machine in machine_dict[date]}
                       for date in machine_dict}
@@ -86,11 +86,13 @@ def schedule(job, machine_dict, workers_dict, start_date, c_matrix_old=pd.DataFr
 
 
 if __name__ == '__main__':
-    jobs, machines, start_date = load_data.load_data(
-        'Linia_VA_2.xlsx', 'Linia VA', 5)
+    jobs, resources = load_data.load_data(
+        'Linia_VA.xlsx', 'Linia VA', 'WorkCalendar.xlsx', 'Sheet1', 5)
 
+    # Start date
+    start_date = min(jobs.keys(), key=lambda key: key[1])[1]
     # Load machines and workers dict
-    machine_dict, workers_dict = parse_machines(machines)
+    machine_dict, workers_dict = parse_machines(resources)
     # Load jobs
     jobs = parse_jobs(jobs)
     # Benchmark exec. time

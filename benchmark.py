@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 def run(amount):
     # Benchmark exec. time
-    jobs, machines, start_date = load_data.load_data(
+    jobs, machines = load_data.load_data(
         'Linia_VA_2.xlsx', 'Linia VA', amount)
     # Load machines and workers dict
     machine_dict, workers_dict = Job_scheduling.parse_machines(machines)
