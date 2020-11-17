@@ -110,6 +110,6 @@ if __name__ == '__main__':
     # print(c_matrix)
     c_matrix.to_excel("output.xlsx")
     # Plot the schedule
-    plot.plot(c_matrix)
+    # plot.plot(c_matrix)
     # Display exec. time
     print('\n', t2-t1)

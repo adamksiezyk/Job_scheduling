@@ -4,6 +4,7 @@ import concurrent.futures
 import numpy as np
 import pandas as pd
 import copy
+import progressbar
 from datetime import datetime, timedelta
 
 FIRST_SHIFT = datetime.strptime('06:00', "%H:%M").time()
@@ -20,6 +21,10 @@ def neh(job_list, machine_dict, workers_dict, start_date, c_matrix_old=pd.DataFr
     jobs_sorted = sorted(
         job_list.items(), key=lambda job: job[0][1], reverse=True)
     queue.append(jobs_sorted[0])
+    # Show progressbar
+    bar = progressbar.ProgressBar(maxval=len(job_list), \
+        widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+    bar.start()
     for i in range(1, len(job_list)):
         # Run each permutation on different thread
         with concurrent.futures.ProcessPoolExecutor() as executor:
@@ -28,9 +33,13 @@ def neh(job_list, machine_dict, workers_dict, start_date, c_matrix_old=pd.DataFr
             results = [process.result()
                        for process in concurrent.futures.as_completed(processes)]
         queue = min(results, key=lambda result: result[0])[1]
+        # Update progressbar
+        bar.update(i+1)
     c_matrix = calculate_makespan(
         queue, machine_dict, workers_dict, start_date, c_matrix_old)
     c_max = get_c_max(start_date, c_matrix)
+    # Empty line after status bar
+    print()
     return queue, c_max, c_matrix
 
 # Calculate makespan of queue

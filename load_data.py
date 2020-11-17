@@ -19,7 +19,7 @@ def load_jobs(path, sheet_name, amount):
         row = data.iloc[i]
         col = data.columns
         # Take only recent jobs, not too old and don't go to far to the future
-        if row[col[1]] >= pd.Timestamp(year=2020, month=11, day=12):
+        if pd.Timestamp(year=2020, month=12, day=1) > row[col[1]] >= pd.Timestamp(year=2020, month=11, day=1):
             # Rearrange them to fit the desired machine scheduling pattern pattern
             date = datetime.combine(row[col[1]].date(), time(hour=6))
             jobs[(row[col[0]], date)] = [[{col[3]: (row[col[3]], '0d'), col[4]: (row[col[4]], '1d')}, "&",

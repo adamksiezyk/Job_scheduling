@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 def run(amount):
     # Benchmark exec. time
     jobs, machines = load_data.load_data(
-        'Linia_VA_2.xlsx', 'Linia VA', amount)
+        'Linia_VA.xlsx', 'Linia VA', 'WorkCalendar.xlsx', 'Sheet1', amount)
+    start_date = min(jobs.keys(), key=lambda key: key[1])[1]
     # Load machines and workers dict
     machine_dict, workers_dict = Job_scheduling.parse_machines(machines)
     # Load jobs
