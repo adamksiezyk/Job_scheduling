@@ -64,21 +64,23 @@ def parse_machines_in_job(machines):
 # Schedule jobs
 
 
-def schedule(job, machine_dict, workers_dict, start_date, c_matrix_old=pd.DataFrame()):
+def schedule(job, machine_dict, workers_dict, start_date, expiration_dict, c_matrix_old=pd.DataFrame()):
     if isinstance(job, dict):
-        return neh.neh(job, machine_dict, workers_dict, start_date, c_matrix_old)
+        return neh.neh(job, machine_dict, workers_dict, start_date, expiration_dict, c_matrix_old)
     elif isinstance(job, list):
         if job[1] == '&':
             # TODO we assume the two jobs don't use the same machines!
-            result_0 = schedule(job[0], machine_dict, workers_dict, start_date)
+            result_0 = schedule(job[0], machine_dict,
+                                workers_dict, start_date, expiration_dict)
             result_2 = schedule(job[2], machine_dict,
-                                workers_dict, start_date, result_0[2])
+                                workers_dict, start_date, expiration_dict, result_0[2])
             c_matrix = result_2[2]
             return lib.append(result_0[0], result_2[0]), max(result_0[1], result_2[1]), c_matrix
         elif job[1] == '>':
-            result_0 = schedule(job[0], machine_dict, workers_dict, start_date)
+            result_0 = schedule(job[0], machine_dict,
+                                workers_dict, start_date, expiration_dict)
             result_2 = schedule(
-                job[2], machine_dict, workers_dict, start_date + result_0[1], result_0[2])
+                job[2], machine_dict, workers_dict, start_date + result_0[1], expiration_dict, result_0[2])
             c_matrix = result_2[2]
             return lib.append(result_0[0], result_2[0]), result_0[1] + result_2[1], c_matrix
     else:
@@ -86,8 +88,8 @@ def schedule(job, machine_dict, workers_dict, start_date, c_matrix_old=pd.DataFr
 
 
 if __name__ == '__main__':
-    jobs, resources = load_data.load_data(
-        'Linia_VA.xlsx', 'Linia VA', 'WorkCalendar.xlsx', 'Sheet1', 5)
+    jobs, expiration_dict, resources = load_data.load_data(
+        'Linia_VA.xlsx', 'Linia VA', 'WorkCalendar.xlsx', 'Sheet1', 20)
 
     # Start date
     start_date = min(jobs.keys(), key=lambda key: key[1])[1]
@@ -99,7 +101,7 @@ if __name__ == '__main__':
     t1 = time.time()
     # Schedule jobs
     queue, duration, c_matrix = schedule(
-        jobs, machine_dict, workers_dict, start_date)
+        jobs, machine_dict, workers_dict, start_date, expiration_dict)
     t2 = time.time()
     # Print optimal queue
     # print('\n', queue, '\n')

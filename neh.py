@@ -12,7 +12,7 @@ SECOND_SHIFT = datetime.strptime('14:00', "%H:%M").time()
 THIRD_SHIFT = datetime.strptime('22:00', "%H:%M").time()
 
 
-def neh(job_list, machine_dict, workers_dict, start_date, c_matrix_old=pd.DataFrame()):
+def neh(job_list, machine_dict, workers_dict, start_date, expiration_dict, c_matrix_old=pd.DataFrame()):
     # TODO functional style
 
     queue = list()
@@ -22,22 +22,30 @@ def neh(job_list, machine_dict, workers_dict, start_date, c_matrix_old=pd.DataFr
         job_list.items(), key=lambda job: job[0][1], reverse=True)
     queue.append(jobs_sorted[0])
     # Show progressbar
-    bar = progressbar.ProgressBar(maxval=len(job_list), \
-        widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+    bar = progressbar.ProgressBar(maxval=len(job_list),
+                                  widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
     bar.start()
     for i in range(1, len(job_list)):
         # Run each permutation on different thread
         with concurrent.futures.ProcessPoolExecutor() as executor:
             processes = [executor.submit(calculate_queue, queue, jobs_sorted[i], j, machine_dict,
-                                         workers_dict, start_date, c_matrix_old) for j in range(i + 1)]
+                                         workers_dict, start_date, expiration_dict, c_matrix_old) for j in range(i + 1)]
             results = [process.result()
                        for process in concurrent.futures.as_completed(processes)]
-        queue = min(results, key=lambda result: result[0])[1]
+        c_tmp, queue = min(results, key=lambda result: result[0])
+        if c_tmp == pd.Timedelta.max:
+            # Find job that exceeded the end date
+            c_matrix = calculate_makespan(
+                queue, machine_dict, workers_dict, start_date, c_matrix_old)
+            for job in c_matrix.index.levels[1]:
+                if max(c_matrix.loc[(slice(None), job), 'End']) > expiration_dict[job]:
+                    raise RuntimeError(
+                        'Job ' + job + ' exceeded expiration date ' + expiration_dict[job].strftime("%d-%m-%Y"))
         # Update progressbar
         bar.update(i+1)
     c_matrix = calculate_makespan(
         queue, machine_dict, workers_dict, start_date, c_matrix_old)
-    c_max = get_c_max(start_date, c_matrix)
+    c_max = get_c_max(start_date, c_matrix, expiration_dict)
     # Empty line after status bar
     print()
     return queue, c_max, c_matrix
@@ -45,11 +53,11 @@ def neh(job_list, machine_dict, workers_dict, start_date, c_matrix_old=pd.DataFr
 # Calculate makespan of queue
 
 
-def calculate_queue(queue, job, j, machine_dict, workers_dict, start_date, c_matrix_old):
+def calculate_queue(queue, job, j, machine_dict, workers_dict, start_date, expiration_dict, c_matrix_old):
     queue_tmp = lib.insert(queue, j, job)
     c_matrix = calculate_makespan(
         queue_tmp, machine_dict, workers_dict, start_date, c_matrix_old)
-    return get_c_max(start_date, c_matrix), queue_tmp
+    return get_c_max(start_date, c_matrix, expiration_dict), queue_tmp
 
 
 def calculate_makespan(queue, machine_dict, workers_dict, start_date=datetime.min, c_matrix_old=pd.DataFrame()):
@@ -180,8 +188,13 @@ def get_operation_details(c_matrix, job_id, machines, machine, machine_amount, w
     return operation_start, operation_end, fastest_machine
 
 
-def get_c_max(start_date, c_matrix):
-    return pd.Timedelta(0) if c_matrix.empty else max(c_matrix['End']) - start_date
+def get_c_max(start_date, c_matrix, expiration_dict):
+    if c_matrix.empty:
+        return pd.Timedelta(0)
+    for job in c_matrix.index.levels[1]:
+        if max(c_matrix.loc[(slice(None), job), 'End']) > expiration_dict[job]:
+            return pd.Timedelta.max
+    return max(c_matrix['End']) - start_date
 
 
 def next_shift(start_date):
