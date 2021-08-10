@@ -1,5 +1,4 @@
 def load_data(path_jobs, sheet_name_jobs, path_resources, sheet_name_resources, amount=None):
-
     # Load jobs
     jobs, expiration_dict = load_jobs(path_jobs, sheet_name_jobs, amount)
 
@@ -21,10 +20,12 @@ def load_jobs(path, sheet_name, amount):
         col = data.columns
         # Rearrange them to fit the desired machine scheduling pattern pattern
         start_date = datetime.combine(row[col[1]].date(), time(hour=6))
-        jobs[(row[col[0]], start_date)] = [[{col[3]: (row[col[3]], '0d'), col[4]: (row[col[4]], '1d')}, "&",
-                                            {col[5]: (row[col[5]], '0d'), col[6]: (row[col[6]], '1d')}], ">",
-                                           {col[7]: (row[col[7]], '1t'), col[8]: (row[col[8]], '2d'), col[9]: (row[col[9]], '2d'), col[10]: (row[col[10]], '0d')}]
-        expiration_dict[row[col[0]]] = row[col[2]].date()
+        jobs[(row[col[0]], start_date)] = [
+            [{col[4]: (row[col[4]], row[col[3]]), col[6]: (row[col[6]], row[col[5]])}, "&",
+             {col[8]: (row[col[8]], row[col[7]]), col[10]: (row[col[10]], row[col[9]])}], ">",
+            {col[12]: (row[col[12]], row[col[11]]), col[14]: (row[col[14]], row[col[13]]),
+             col[16]: (row[col[16]], row[col[15]]), col[18]: (row[col[18]], row[col[17]])}]
+        expiration_dict[row[col[0]]] = row[col[2]]
         if len(jobs) == amount:
             break
     return jobs, expiration_dict
@@ -38,8 +39,8 @@ def load_resources(path, sheet_name):
     resources = {}
     for i in range(0, len(data), 3):
         resources[data.iloc[i][col[0]].date()] = {
-            machine: [data.iloc[i][machine], data.iloc[i+1]
-                      [machine], data.iloc[i+2][machine]]
+            machine: [data.iloc[i][machine], data.iloc[i + 1]
+            [machine], data.iloc[i + 2][machine]]
             for machine in col[2:-1]
         }
     return resources
