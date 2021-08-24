@@ -9,4 +9,4 @@ class Project:
     """
     start_dt: datetime
     expiration_dt: datetime
-    project_id: str
+    id: str
