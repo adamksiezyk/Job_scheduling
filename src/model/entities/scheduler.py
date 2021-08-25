@@ -13,20 +13,13 @@ class Scheduler:
 
     def schedule_job(self, job: Job) -> None:
         # TODO too big
-        previous_job = self.find_last_scheduled_job(job.project.id)
-        previous_job_end = datetime.min if previous_job is None else previous_job.parse_delay()
-        fastest_resource = self.find_earliest_resource(job.machine_id, previous_job_end)
+        fastest_start_dt = self.find_fastest_start_dt(job)
+        fastest_resource = self.find_earliest_resource(job.machine_id, fastest_start_dt)
         if fastest_resource is None:
             raise ValueError("No resources available")
 
-        ###########################
-        # _job_end_dt = fastest_resource.start_dt + job.duration
-        # job_end_dt = _job_end_dt if _job_end_dt <= fastest_resource.end_dt else fastest_resource.end_dt
-        # new_resource = replace(fastest_resource, start_dt=job_end_dt) if job_end_dt < fastest_resource.end_dt else None
-        # scheduled_job = ScheduledJob(job_end_dt, fastest_resource.start_dt, job.delay, job.project, job.machine_id)
-        ###########################
-
-        job_end_dt = fastest_resource.start_dt + (job.duration / fastest_resource.worker_amount)
+        job_start_dt = max(fastest_start_dt, fastest_resource.start_dt)
+        job_end_dt = job_start_dt + (job.duration / fastest_resource.worker_amount)
         if job_end_dt > job.project.expiration_dt:
             ValueError("Job duration exceeded project's expiration date")
 
@@ -35,17 +28,16 @@ class Scheduler:
             new_resource = replace(fastest_resource, start_dt=job_end_dt)
             self.resources.remove(fastest_resource)
             self.resources.append(new_resource)
-            scheduled_job = ScheduledJob(job.duration, job.machine_id, job.delay, job.project, job_end_dt,
-                                         fastest_resource.start_dt)
+            scheduled_job = ScheduledJob(job.duration, job.machine_id, job.delay, job.project, job_end_dt, job_start_dt)
             self.queue.append(scheduled_job)
         else:
             # Next resource is needed
             self.resources.remove(fastest_resource)
-            scheduled_job = ScheduledJob(fastest_resource.end_dt - fastest_resource.start_dt, job.machine_id, '0d',
-                                         job.project, fastest_resource.end_dt, fastest_resource.start_dt)
+            new_job_end_dt = fastest_resource.end_dt
+            new_duration = new_job_end_dt - job_start_dt
+            scheduled_job = ScheduledJob(new_duration, job.machine_id, '0d', job.project, new_job_end_dt, job_start_dt)
             self.queue.append(scheduled_job)
-            new_job = Job(job.duration - (fastest_resource.end_dt - fastest_resource.start_dt), job.machine_id,
-                          job.delay, job.project)
+            new_job = Job(job.duration - new_duration, job.machine_id, job.delay, job.project)
             self.schedule_job(new_job)
 
     def find_available_resources_for_machine(self, machine_id: str) -> list[Resource]:
@@ -77,13 +69,15 @@ class Scheduler:
             return None
         return min(available_resources)
 
-    def find_scheduled_jobs(self, project_id: str) -> list[ScheduledJob]:
+    def find_fastest_start_dt(self, job) -> datetime:
         """
-        Returns the scheduled jobs for the given project
-        @param project_id: project ID
-        @return: list of scheduled jobs
+        Returns the fastest start datetime of the given job
+        @param job: job to schedule
+        @return: fastest start datetime
         """
-        return [j for j in self.queue if j.project.id == project_id]
+        previous_job = self.find_last_scheduled_job(job.project.id)
+        previous_job_end = datetime.min if previous_job is None else previous_job.parse_delay()
+        return max(previous_job_end, job.project.start_dt)
 
     def find_last_scheduled_job(self, project_id: str) -> Optional[ScheduledJob]:
         """
@@ -93,3 +87,11 @@ class Scheduler:
         """
         previous_jobs = self.find_scheduled_jobs(project_id)
         return max(previous_jobs, key=lambda j: j.end_dt) if previous_jobs else None
+
+    def find_scheduled_jobs(self, project_id: str) -> list[ScheduledJob]:
+        """
+        Returns the scheduled jobs for the given project
+        @param project_id: project ID
+        @return: list of scheduled jobs
+        """
+        return [j for j in self.queue if j.project.id == project_id]
