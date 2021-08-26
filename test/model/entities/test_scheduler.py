@@ -10,6 +10,8 @@ from src.model.entities.scheduler import Scheduler
 
 class TestScheduler(TestCase):
     def setUp(self) -> None:
+        self.empty_scheduler = Scheduler()
+
         self.r1_m1 = Resource(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 14), machine_id="M1",
                               worker_amount=2)
         self.r2_m1 = Resource(start_dt=datetime(2021, 4, 1, 14), end_dt=datetime(2021, 4, 1, 22), machine_id="M1",
@@ -24,8 +26,6 @@ class TestScheduler(TestCase):
                               worker_amount=2)
         self.resources_init = [self.r1_m1, self.r2_m1, self.r3_m1, self.r1_m2, self.r2_m2, self.r3_m2]
 
-        self.empty_scheduler = Scheduler()
-
         self.project = Project(start_dt=datetime(2021, 3, 28, 6), expiration_dt=datetime(2021, 4, 10), id="P1")
         self.j1 = ScheduledJob(start_dt=datetime(2021, 3, 28, 6), end_dt=datetime(2021, 3, 28, 14),
                                duration=timedelta(hours=8), delay='0d', machine_id="M1", project=self.project)
@@ -36,6 +36,7 @@ class TestScheduler(TestCase):
         self.j4 = ScheduledJob(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 10),
                                duration=timedelta(hours=4), delay='0d', machine_id="M2", project=self.project)
         self.queue_init = [self.j1, self.j2, self.j3, self.j4]
+
         self.scheduler = Scheduler(queue=[*self.queue_init], resources=[*self.resources_init])
 
     def test_schedule_job_no_resources(self):
@@ -79,6 +80,11 @@ class TestScheduler(TestCase):
         j = Job(duration=timedelta(hours=10), delay="1d", machine_id="M2", project=p)
         self.scheduler.schedule_job(j)
         self.assertLessEqual(p.start_dt, self.scheduler.queue[-1].start_dt)
+
+    def test_schedule_job_fails_when_project_ends(self):
+        p = Project(start_dt=datetime(2021, 3, 2), expiration_dt=datetime(2021, 3, 10), id="P2")
+        j = Job(duration=timedelta(hours=10), delay="1d", machine_id="M2", project=p)
+        self.assertRaises(ValueError, self.scheduler.schedule_job, j)
 
     def test_find_available_resources_for_machine_not_found(self):
         self.assertEqual([], self.empty_scheduler.find_available_resources_for_machine("M1"))

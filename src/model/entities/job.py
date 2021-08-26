@@ -24,6 +24,10 @@ class ScheduledJob(Job):
     end_dt: datetime  # Scheduled job's start date
     start_dt: datetime  # Scheduled job's end date
 
+    def __post_init__(self):
+        if self.start_dt > self.end_dt:
+            raise ValueError("Scheduled job end date can not be before scheduled job start date")
+
     def parse_delay(self) -> datetime:
         """
         Adds delay to the given date

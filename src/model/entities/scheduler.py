@@ -21,7 +21,7 @@ class Scheduler:
         job_start_dt = max(fastest_start_dt, fastest_resource.start_dt)
         job_end_dt = job_start_dt + (job.duration / fastest_resource.worker_amount)
         if job_end_dt > job.project.expiration_dt:
-            ValueError("Job duration exceeded project's expiration date")
+            raise ValueError("Job duration exceeded project's expiration date")
 
         if job_end_dt <= fastest_resource.end_dt:
             # This resource is enough

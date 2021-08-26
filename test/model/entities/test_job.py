@@ -15,6 +15,17 @@ class TestScheduledJob(TestCase):
                                                      project=self.project, end_dt=datetime(2021, 4, 1, 6),
                                                      start_dt=datetime(2021, 3, 28, 14))
 
+    def test_post_init(self):
+        init_args = {
+            'duration': timedelta(hours=6),
+            'machine_id': "M1",
+            'delay': "1d",
+            'project': self.project,
+            'end_dt': datetime(2021, 3, 20),
+            'start_dt': datetime(2021, 3, 28)
+        }
+        self.assertRaises(ValueError, ScheduledJob, **init_args)
+
     def test_parse_delay_day(self):
         self.assertEqual(self.scheduled_job_day_delay.parse_delay(), datetime(2021, 4, 3, 6))
 

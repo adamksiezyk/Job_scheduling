@@ -10,3 +10,7 @@ class Project:
     start_dt: datetime
     expiration_dt: datetime
     id: str
+
+    def __post_init__(self):
+        if self.start_dt > self.expiration_dt:
+            raise ValueError("Project expiration date can not be earlier than project start date")
