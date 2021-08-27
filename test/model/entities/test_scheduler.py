@@ -39,6 +39,9 @@ class TestScheduler(TestCase):
 
         self.scheduler = Scheduler(queue=[*self.queue_init], resources=[*self.resources_init])
 
+    def test_calculate_queue_duration(self):
+        self.assertEqual(datetime(2021, 4, 1, 14).timestamp(), self.scheduler.calculate_queue_duration())
+
     def test_schedule_job_no_resources(self):
         j1 = Job(duration=timedelta(hours=6), delay="1d", machine_id="M0", project=self.project)
         j2 = Job(duration=timedelta(hours=6), delay="0d", machine_id="M1", project=self.project)
@@ -60,10 +63,10 @@ class TestScheduler(TestCase):
 
     def test_schedule_job_one_resource_is_not_enough(self):
         j = Job(duration=timedelta(hours=20), delay="1d", machine_id="M2", project=self.project)
-        s1 = ScheduledJob(duration=timedelta(hours=8), delay="0d", machine_id=j.machine_id, project=j.project,
+        s1 = ScheduledJob(duration=timedelta(hours=16), delay="0d", machine_id=j.machine_id, project=j.project,
                           start_dt=datetime(2021, 4, 1, 14), end_dt=datetime(2021, 4, 1, 22))
-        s2 = ScheduledJob(duration=timedelta(hours=12), delay=j.delay, machine_id=j.machine_id, project=j.project,
-                          start_dt=datetime(2021, 4, 1, 22), end_dt=datetime(2021, 4, 2, 4))
+        s2 = ScheduledJob(duration=timedelta(hours=4), delay=j.delay, machine_id=j.machine_id, project=j.project,
+                          start_dt=datetime(2021, 4, 1, 22), end_dt=datetime(2021, 4, 2, 0))
         r = replace(self.r3_m2, start_dt=s2.end_dt)
         self.resources_init.remove(self.r2_m2)
         self.resources_init.remove(self.r3_m2)

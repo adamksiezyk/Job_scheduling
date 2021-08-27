@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, replace, field
 from datetime import datetime
 from typing import Optional
@@ -10,6 +12,13 @@ from src.model.entities.resource import Resource
 class Scheduler:
     queue: list[ScheduledJob] = field(default_factory=list)  # Queue of scheduled jobs
     resources: list[Resource] = field(default_factory=list)  # List of available resources
+
+    def calculate_queue_duration(self) -> float:
+        """
+        Returns the duration of the queue
+        @return: queue duration
+        """
+        return max(self.queue).end_dt.timestamp()
 
     def schedule_job(self, job: Job) -> None:
         # TODO too big
@@ -34,7 +43,7 @@ class Scheduler:
             # Next resource is needed
             self.resources.remove(fastest_resource)
             new_job_end_dt = fastest_resource.end_dt
-            new_duration = new_job_end_dt - job_start_dt
+            new_duration = (new_job_end_dt - job_start_dt) * fastest_resource.worker_amount
             scheduled_job = ScheduledJob(new_duration, job.machine_id, '0d', job.project, new_job_end_dt, job_start_dt)
             self.queue.append(scheduled_job)
             new_job = Job(job.duration - new_duration, job.machine_id, job.delay, job.project)
@@ -86,7 +95,7 @@ class Scheduler:
         @return: last scheduled job
         """
         previous_jobs = self.find_scheduled_jobs(project_id)
-        return max(previous_jobs, key=lambda j: j.end_dt) if previous_jobs else None
+        return max(previous_jobs) if previous_jobs else None
 
     def find_scheduled_jobs(self, project_id: str) -> list[ScheduledJob]:
         """
