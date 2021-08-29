@@ -1,29 +1,29 @@
-import math
-from random import sample
+from random import sample, choices, randint
+from typing import TypeVar, Callable
 
 from src.model.entities.job import Job
-from src.model.entities.resource import Resource
-from src.model.entities.scheduler import Scheduler
 
+Creature = TypeVar("Creature")
 Genome = list[Job]
 Population = list[Genome]
+FitnessFunc = Callable[[Genome], float]
 
 
 class GeneticAlgorithm:
-    def __init__(self, jobs: list[Job], resources: list[Resource]):
+    def __init__(self, creatures: list[Creature], fitness: FitnessFunc):
         """
-        @param jobs: list of jobs that form a genome
-        @param resources: list of available resources
+        @param creatures: list of jobs that form a genome
+        @param fitness: a function that calculates the fitness weight of the given genome
         """
-        self.jobs = jobs
-        self.resources = resources
+        self.creatures = creatures
+        self.fitness = fitness
 
     def create_genome(self) -> Genome:
         """
         Creates a genome out of the creatures
         @return: genome
         """
-        return sample(self.jobs, len(self.jobs))
+        return sample(self.creatures, len(self.creatures))
 
     def create_population(self, amount: int) -> Population:
         """
@@ -33,17 +33,29 @@ class GeneticAlgorithm:
         """
         return [self.create_genome() for _ in range(amount)]
 
-    def fitness(self, genome: Genome) -> float:
+    def selection(self, population: Population, amount: int = 2) -> list[Genome]:
         """
-        Returns the fitness value of a genome. The timestamp of the whole process duration or infinity if an scheduling
-        error occurred
-        @param genome: genome
-        @return: fitness value of the provided genome
+        Returns the amount best genomes with the probability defined by the fitness function
+        @param population: a population
+        @param amount: amount of genomes to return
+        @return: amount best genomes
         """
-        scheduler = Scheduler(resources=self.resources)
-        try:
-            for creature in genome:
-                scheduler.schedule_job(creature)
-        except ValueError:
-            return math.inf
-        return scheduler.calculate_queue_duration()
+        return choices(population=population, weights=[self.fitness(genome) for genome in population], k=amount)
+
+    def crossover(self, a: Genome, b: Genome) -> tuple[Genome, Genome]:
+        """
+        Returns the crossover children of two parent genomes
+        @param a: parent A
+        @param b: parent B
+        @return: crossover children of the parent genomes
+        """
+        length = len(a)
+        if length != len(b):
+            raise ValueError("Both genomes have to be equal lengths")
+
+        p = randint(1, length - 1)
+        leftover_a = [elem for elem in a[p:] if elem not in b[p:]]
+        leftover_b = [elem for elem in b[p:] if elem not in a[p:]]
+        child_a = [elem if elem not in b[p:] else leftover_a.pop(0) for elem in a[:p]] + b[p:]
+        child_b = [elem if elem not in a[p:] else leftover_b.pop(0) for elem in b[:p]] + a[p:]
+        return child_a, child_b

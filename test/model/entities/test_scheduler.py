@@ -39,6 +39,15 @@ class TestScheduler(TestCase):
 
         self.scheduler = Scheduler(queue=[*self.queue_init], resources=[*self.resources_init])
 
+    def test_create_fitness_function(self):
+        fitness = Scheduler.create_fitness_function(self.resources_init)
+        self.assertLess(0.0, fitness(self.queue_init))
+
+    def test_fitness_function(self):
+        fitness = Scheduler.create_fitness_function(self.resources_init)
+        j = Job(duration=timedelta(hours=20), delay="1d", machine_id="M2", project=self.project)
+        self.assertEqual(datetime(2021, 4, 1, 16).timestamp(), fitness([j]))
+
     def test_calculate_queue_duration(self):
         self.assertEqual(datetime(2021, 4, 1, 14).timestamp(), self.scheduler.calculate_queue_duration())
 

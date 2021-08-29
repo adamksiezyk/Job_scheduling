@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, replace, field
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Callable
 
 from src.model.entities.job import ScheduledJob, Job
 from src.model.entities.resource import Resource
@@ -12,6 +13,30 @@ from src.model.entities.resource import Resource
 class Scheduler:
     queue: list[ScheduledJob] = field(default_factory=list)  # Queue of scheduled jobs
     resources: list[Resource] = field(default_factory=list)  # List of available resources
+
+    @staticmethod
+    def create_fitness_function(resources: list[Resource]) -> Callable[[list[Job]], float]:
+        """
+        Returns a fitness function
+        @param resources: available resources
+        @return: fitness function
+        """
+
+        def inner(queue: list[Job]) -> float:
+            """
+            A fitness function that returns the fitness weight of the give queue
+            @param queue: an ordered list of Jobs
+            @return: a fitness weight of the given queue
+            """
+            scheduler = Scheduler(resources=[*resources])
+            try:
+                for creature in queue:
+                    scheduler.schedule_job(creature)
+            except ValueError:
+                return math.inf
+            return scheduler.calculate_queue_duration()
+
+        return inner
 
     def calculate_queue_duration(self) -> float:
         """
