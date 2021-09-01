@@ -1,42 +1,19 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, replace, field
+from dataclasses import replace
 from datetime import datetime
-from typing import Optional, Callable
+from typing import Optional
 
+from src.model.algorithms.genetic import SchedulingGeneticAlgorithm
 from src.model.entities.job import ScheduledJob, Job
 from src.model.entities.resource import Resource
 
 
-@dataclass
 class Scheduler:
-    queue: list[ScheduledJob] = field(default_factory=list)  # Queue of scheduled jobs
-    resources: list[Resource] = field(default_factory=list)  # List of available resources
-
-    @staticmethod
-    def create_fitness_function(resources: list[Resource]) -> Callable[[list[Job]], float]:
-        """
-        Returns a fitness function
-        @param resources: available resources
-        @return: fitness function
-        """
-
-        def inner(queue: list[Job]) -> float:
-            """
-            A fitness function that returns the fitness weight of the give queue
-            @param queue: an ordered list of Jobs
-            @return: a fitness weight of the given queue
-            """
-            scheduler = Scheduler(resources=[*resources])
-            try:
-                for creature in queue:
-                    scheduler.schedule_job(creature)
-            except ValueError:
-                return math.inf
-            return scheduler.calculate_queue_duration()
-
-        return inner
+    def __init__(self, resources: list[Resource]):
+        self.resources = resources
+        self.queue = []
 
     def calculate_queue_duration(self) -> float:
         """
@@ -129,3 +106,41 @@ class Scheduler:
         @return: list of scheduled jobs
         """
         return [j for j in self.queue if j.project.id == project_id]
+
+
+class GeneticScheduler(Scheduler):
+    def __init__(self, resources: list[Resource], jobs: list[Job]):
+        super().__init__(resources)
+        self.jobs = jobs
+        self.algorithm = SchedulingGeneticAlgorithm(list(range(len(self.jobs))), self.create_fitness_function())
+
+    def schedule(self) -> tuple[list[ScheduledJob], list[Resource]]:
+        """
+        Schedules the jobs in the order that minimizes the total duration of the queue
+        @return: ordered queue and left resources
+        """
+        queue = self.algorithm.optimize(population_size=50, generation_limit=100)
+        for job in queue:
+            self.schedule_job(job)
+        return self.queue, self.resources
+
+    def create_fitness_function(self):
+        jobs = self.jobs
+        resources = [*self.resources]
+
+        def inner(order: list[int]) -> float:
+            """
+            A fitness function that returns the fitness weight of the give queue
+            @param order: a list that orders the queue
+            @return: a fitness weight of the given queue
+            """
+            scheduler = Scheduler(resources)
+            queue = [job for _, job in sorted(zip(order, jobs))]
+            try:
+                for job in queue:
+                    scheduler.schedule_job(job)
+            except ValueError:
+                return math.inf
+            return scheduler.calculate_queue_duration()
+
+        return inner

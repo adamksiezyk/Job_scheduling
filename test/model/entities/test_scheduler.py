@@ -5,12 +5,12 @@ from unittest import TestCase
 from src.model.entities.job import ScheduledJob, Job
 from src.model.entities.project import Project
 from src.model.entities.resource import Resource
-from src.model.entities.scheduler import Scheduler
+from src.model.entities.scheduler import GeneticScheduler, Scheduler
 
 
 class TestScheduler(TestCase):
     def setUp(self) -> None:
-        self.empty_scheduler = Scheduler()
+        self.empty_scheduler = Scheduler([])
 
         self.r1_m1 = Resource(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 14), machine_id="M1",
                               worker_amount=2)
@@ -37,16 +37,8 @@ class TestScheduler(TestCase):
                                duration=timedelta(hours=4), delay='0d', machine_id="M2", project=self.project)
         self.queue_init = [self.j1, self.j2, self.j3, self.j4]
 
-        self.scheduler = Scheduler(queue=[*self.queue_init], resources=[*self.resources_init])
-
-    def test_create_fitness_function(self):
-        fitness = Scheduler.create_fitness_function(self.resources_init)
-        self.assertLess(0.0, fitness(self.queue_init))
-
-    def test_fitness_function(self):
-        fitness = Scheduler.create_fitness_function(self.resources_init)
-        j = Job(duration=timedelta(hours=20), delay="1d", machine_id="M2", project=self.project)
-        self.assertEqual(datetime(2021, 4, 1, 16).timestamp(), fitness([j]))
+        self.scheduler = Scheduler(resources=[*self.resources_init])
+        self.scheduler.queue = [*self.queue_init]
 
     def test_calculate_queue_duration(self):
         self.assertEqual(datetime(2021, 4, 1, 14).timestamp(), self.scheduler.calculate_queue_duration())
@@ -145,3 +137,43 @@ class TestScheduler(TestCase):
 
     def test_find_last_scheduled_job_found(self):
         self.assertEqual(datetime(2021, 4, 1, 14), self.scheduler.find_last_scheduled_job(self.project.id).end_dt)
+
+
+class TestGeneticScheduler(TestCase):
+    def setUp(self):
+        self.empty_scheduler = GeneticScheduler([], [])
+
+        self.r1_m1 = Resource(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 14), machine_id="M1",
+                              worker_amount=2)
+        self.r2_m1 = Resource(start_dt=datetime(2021, 4, 1, 14), end_dt=datetime(2021, 4, 1, 22), machine_id="M1",
+                              worker_amount=2)
+        self.r3_m1 = Resource(start_dt=datetime(2021, 4, 1, 22), end_dt=datetime(2021, 4, 2, 6), machine_id="M1",
+                              worker_amount=2)
+        self.r1_m2 = Resource(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 14), machine_id="M2",
+                              worker_amount=2)
+        self.r2_m2 = Resource(start_dt=datetime(2021, 4, 1, 14), end_dt=datetime(2021, 4, 1, 22), machine_id="M2",
+                              worker_amount=2)
+        self.r3_m2 = Resource(start_dt=datetime(2021, 4, 1, 22), end_dt=datetime(2021, 4, 2, 6), machine_id="M2",
+                              worker_amount=2)
+        self.resources_init = [self.r1_m1, self.r2_m1, self.r3_m1, self.r1_m2, self.r2_m2, self.r3_m2]
+
+        self.project = Project(start_dt=datetime(2021, 3, 28, 6), expiration_dt=datetime(2021, 4, 10), id="P1")
+        self.j1 = ScheduledJob(start_dt=datetime(2021, 3, 28, 6), end_dt=datetime(2021, 3, 28, 14),
+                               duration=timedelta(hours=8), delay='0d', machine_id="M1", project=self.project)
+        self.j2 = ScheduledJob(start_dt=datetime(2021, 3, 28, 6), end_dt=datetime(2021, 3, 28, 14),
+                               duration=timedelta(hours=8), delay='1d', machine_id="M2", project=self.project)
+        self.j3 = ScheduledJob(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 14),
+                               duration=timedelta(hours=8), delay='0d', machine_id="M1", project=self.project)
+        self.j4 = ScheduledJob(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 10),
+                               duration=timedelta(hours=4), delay='0d', machine_id="M2", project=self.project)
+        self.jobs = [self.j1, self.j2, self.j3, self.j4]
+        self.order = list(range(len(self.jobs)))
+        self.scheduler = GeneticScheduler(resources=[*self.resources_init], jobs=self.jobs)
+
+    def test_create_fitness_function(self):
+        fitness = self.scheduler.create_fitness_function()
+        self.assertLess(0.0, fitness(list(range(len(self.jobs)))))
+
+    def test_fitness_function(self):
+        fitness = self.scheduler.create_fitness_function()
+        self.assertEqual(datetime(2021, 4, 1, 10).timestamp(), fitness([0]))

@@ -1,54 +1,66 @@
-from datetime import datetime, timedelta
-from random import seed
+from random import seed, choices, randint, random, sample
 from unittest import TestCase
 
-from src.model.algorithms.genetic import GeneticAlgorithm
-from src.model.entities.job import Job
-from src.model.entities.project import Project
-from src.model.entities.resource import Resource
-from src.model.entities.scheduler import Scheduler
+from src.model.algorithms.genetic import Genome, Population, GeneticAlgorithm
+
+
+def fitness(genome: Genome) -> float:
+    return (genome - 2) ** 2
+
+
+class BasicProblem(GeneticAlgorithm):
+    def create_genome(self) -> Genome:
+        return randint(-20, 20)
+
+    def create_population(self, amount: int) -> Population:
+        return [self.create_genome() for _ in range(amount)]
+
+    def selection(self, population: Population, amount: int = 2) -> list[Genome]:
+        return choices(population=population, weights=[self.fitness(genome) for genome in population], k=amount)
+
+    def crossover(self, a: Genome, b: Genome) -> tuple[Genome, Genome]:
+        return ((a / 2) + b) / 2, ((b / 2) + a) / 2
+
+    def mutation(self, genome: Genome, amount: int, probability: float) -> Genome:
+        return sum(genome * sample([-1, 1], 1)[0] * 3 / 4 + 2 for _ in range(amount) if random() < probability)
 
 
 class TestGeneticAlgorithm(TestCase):
+
     def setUp(self):
-        r1 = Resource(start_dt=datetime(2021, 3, 4, 6), end_dt=datetime(2021, 3, 4, 14), machine_id="M1",
-                      worker_amount=1)
-        r2 = Resource(start_dt=datetime(2021, 3, 4, 6), end_dt=datetime(2021, 3, 4, 14), machine_id="M2",
-                      worker_amount=2)
-        r3 = Resource(start_dt=datetime(2021, 3, 4, 14), end_dt=datetime(2021, 3, 4, 22), machine_id="M1",
-                      worker_amount=2)
-        r4 = Resource(start_dt=datetime(2021, 3, 4, 14), end_dt=datetime(2021, 3, 4, 22), machine_id="M2",
-                      worker_amount=2)
-        r5 = Resource(start_dt=datetime(2021, 3, 4, 22), end_dt=datetime(2021, 3, 5, 6), machine_id="M1",
-                      worker_amount=2)
-        r6 = Resource(start_dt=datetime(2021, 3, 4, 22), end_dt=datetime(2021, 3, 5, 6), machine_id="M2",
-                      worker_amount=2)
-        self.resources = [r1, r2, r3, r4, r5, r6]
-        p = Project(id="P1", start_dt=datetime(2021, 3, 1), expiration_dt=datetime(2021, 3, 31))
-        j1 = Job(project=p, duration=timedelta(hours=4), delay="0d", machine_id="M1")
-        j2 = Job(project=p, duration=timedelta(hours=15), delay="0d", machine_id="M2")
-        j3 = Job(project=p, duration=timedelta(hours=8), delay="0d", machine_id="M1")
-        self.jobs = [j1, j2, j3]
-        fitness = Scheduler.create_fitness_function(self.resources)
-        self.genetic_algorithm = GeneticAlgorithm(self.jobs, fitness)
+        self.basic_problem = BasicProblem(0, fitness)
 
     def test_create_genome(self):
-        self.assertCountEqual(self.jobs, self.genetic_algorithm.create_genome())
+        self.assertIsInstance(self.basic_problem.create_genome(), int)
 
     def test_create_population(self):
-        [self.assertCountEqual(self.jobs, genome) for genome in self.genetic_algorithm.create_population(10)]
+        population = self.basic_problem.create_population(10)
+        self.assertEqual(10, len(population))
+        [self.assertIsInstance(genome, int) for genome in population]
 
     def test_fitness(self):
-        self.assertEqual(datetime(2021, 3, 4, 21, 30).timestamp(), self.genetic_algorithm.fitness(self.jobs))
+        self.assertAlmostEqual(0.25, self.basic_problem.fitness(2.5))
 
     def test_selection(self):
         seed(2000)
-        population = [self.jobs, self.jobs[-1::-1], [self.jobs[1], self.jobs[-1], self.jobs[0]]]
-        self.assertEqual([population[1], population[2]], self.genetic_algorithm.selection(population, 2))
+        population = [self.basic_problem.initial_genome, self.basic_problem.initial_genome * 3,
+                      self.basic_problem.initial_genome / 2]
+        self.fail()
 
     def test_crossover(self):
-        a = self.jobs
-        b = self.jobs[-1::-1]
-        new_a, new_b = self.genetic_algorithm.crossover(a, b)
-        self.assertCountEqual(self.jobs, new_a)
-        self.assertCountEqual(self.jobs, new_b)
+        seed(2000)
+        a = self.basic_problem.initial_genome
+        b = self.basic_problem.initial_genome * 2 - 3
+        new_a, new_b = self.basic_problem.crossover(a, b)
+        self.assertIsInstance(new_a, float)
+        self.assertIsInstance(new_b, float)
+
+    def test_mutation(self):
+        seed(2000)
+        self.assertIsInstance(self.basic_problem.mutation(10, 3, 0.7), float)
+
+    def test_evolution(self):
+        seed(2000)
+        solution = self.basic_problem.optimize(5, 10)
+        print(solution)
+        self.assertIsInstance(solution, float)
