@@ -4,10 +4,6 @@ from unittest import TestCase
 from src.model.algorithms.genetic import Genome, Population, GeneticAlgorithm
 
 
-def fitness(genome: Genome) -> float:
-    return (genome - 2) ** 2
-
-
 class BasicProblem(GeneticAlgorithm):
     def create_genome(self) -> Genome:
         return randint(-20, 20)
@@ -24,11 +20,13 @@ class BasicProblem(GeneticAlgorithm):
     def mutation(self, genome: Genome, amount: int, probability: float) -> Genome:
         return sum(genome * sample([-1, 1], 1)[0] * 3 / 4 + 2 for _ in range(amount) if random() < probability)
 
+    def fitness(self, genome: Genome) -> float:
+        return (genome - 2) ** 2
+
 
 class TestGeneticAlgorithm(TestCase):
-
     def setUp(self):
-        self.basic_problem = BasicProblem(0, fitness)
+        self.basic_problem = BasicProblem(0)
 
     def test_create_genome(self):
         self.assertIsInstance(self.basic_problem.create_genome(), int)
@@ -45,7 +43,7 @@ class TestGeneticAlgorithm(TestCase):
         seed(2000)
         population = [self.basic_problem.initial_genome, self.basic_problem.initial_genome * 3,
                       self.basic_problem.initial_genome / 2]
-        self.fail()
+        self.assertTrue(all([genome in population for genome in self.basic_problem.selection(population)]))
 
     def test_crossover(self):
         seed(2000)
@@ -62,5 +60,5 @@ class TestGeneticAlgorithm(TestCase):
     def test_evolution(self):
         seed(2000)
         solution = self.basic_problem.optimize(5, 10)
-        print(solution)
+        print(f"min{{(x-2)^2}} = {solution}")
         self.assertIsInstance(solution, float)

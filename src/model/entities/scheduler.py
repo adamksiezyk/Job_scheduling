@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import math
 from dataclasses import replace
 from datetime import datetime
 from typing import Optional
 
-from src.model.algorithms.genetic import SchedulingGeneticAlgorithm
 from src.model.entities.job import ScheduledJob, Job
 from src.model.entities.resource import Resource
 
@@ -106,41 +104,3 @@ class Scheduler:
         @return: list of scheduled jobs
         """
         return [j for j in self.queue if j.project.id == project_id]
-
-
-class GeneticScheduler(Scheduler):
-    def __init__(self, resources: list[Resource], jobs: list[Job]):
-        super().__init__(resources)
-        self.jobs = jobs
-        self.algorithm = SchedulingGeneticAlgorithm(list(range(len(self.jobs))), self.create_fitness_function())
-
-    def schedule(self) -> tuple[list[ScheduledJob], list[Resource]]:
-        """
-        Schedules the jobs in the order that minimizes the total duration of the queue
-        @return: ordered queue and left resources
-        """
-        queue = self.algorithm.optimize(population_size=50, generation_limit=100)
-        for job in queue:
-            self.schedule_job(job)
-        return self.queue, self.resources
-
-    def create_fitness_function(self):
-        jobs = self.jobs
-        resources = [*self.resources]
-
-        def inner(order: list[int]) -> float:
-            """
-            A fitness function that returns the fitness weight of the give queue
-            @param order: a list that orders the queue
-            @return: a fitness weight of the given queue
-            """
-            scheduler = Scheduler(resources)
-            queue = [job for _, job in sorted(zip(order, jobs))]
-            try:
-                for job in queue:
-                    scheduler.schedule_job(job)
-            except ValueError:
-                return math.inf
-            return scheduler.calculate_queue_duration()
-
-        return inner

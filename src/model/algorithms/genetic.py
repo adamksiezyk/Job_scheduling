@@ -1,8 +1,12 @@
+import math
 from abc import abstractmethod
 from random import sample, choices, random, randint
 from typing import TypeVar, Callable
 
 from src.model.algorithms.algorithm import Algorithm
+from src.model.entities.job import Job
+from src.model.entities.resource import Resource
+from src.model.entities.scheduler import Scheduler
 
 Genome = TypeVar("Genome")
 Population = list[Genome]
@@ -10,13 +14,12 @@ FitnessFunc = Callable[[Genome], float]
 
 
 class GeneticAlgorithm(Algorithm):
-    def __init__(self, initial_genome: Genome, fitness: FitnessFunc):
+    def __init__(self, initial_genome: Genome):
         """
         @param initial_genome: list of creatures that form a genome
         @param fitness: a function that calculates the fitness weight of the given genome
         """
         self.initial_genome = initial_genome
-        self.fitness = fitness
 
     @abstractmethod
     def create_genome(self) -> Genome:
@@ -61,6 +64,14 @@ class GeneticAlgorithm(Algorithm):
         @return: genome with mutated creatures
         """
 
+    @abstractmethod
+    def fitness(self, genome: Genome) -> float:
+        """
+        A fitness function that returns the fitness weight of the give genome
+        @param genome: a genome
+        @return: a fitness weight of the given genome
+        """
+
     def optimize(self, population_size: int, generation_limit: int) -> Genome:
         """
         Finds the optimal solution of the given problem
@@ -90,6 +101,11 @@ class GeneticAlgorithm(Algorithm):
 
 
 class SchedulingGeneticAlgorithm(GeneticAlgorithm):
+    def __init__(self, initial_genome: Genome, jobs: list[Job], resources: list[Resource]):
+        super().__init__(initial_genome)
+        self.jobs = [*jobs]
+        self.resources = [*resources]
+
     def create_genome(self) -> Genome:
         """
         Creates a genome out of the creatures
@@ -150,3 +166,18 @@ class SchedulingGeneticAlgorithm(GeneticAlgorithm):
                 continue
             mutated_genome[idx], mutated_genome[new_idx] = mutated_genome[new_idx], mutated_genome[idx]
         return mutated_genome
+
+    def fitness(self, genome: Genome) -> float:
+        """
+        A fitness function that returns the fitness weight of the give genome
+        @param genome: a genome
+        @return: a fitness weight of the given genome
+        """
+        scheduler = Scheduler([*self.resources])
+        queue = [job for _, job in sorted(zip(genome, self.jobs))]
+        try:
+            for job in queue:
+                scheduler.schedule_job(job)
+        except ValueError:
+            return math.inf
+        return scheduler.calculate_queue_duration()
