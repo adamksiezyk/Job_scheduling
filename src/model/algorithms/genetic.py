@@ -14,12 +14,11 @@ FitnessFunc = Callable[[Genome], float]
 
 
 class GeneticAlgorithm(Algorithm):
-    def __init__(self, initial_genome: Genome):
+    def __init__(self, creatures: Genome):
         """
-        @param initial_genome: list of creatures that form a genome
-        @param fitness: a function that calculates the fitness weight of the given genome
+        @param creatures: list of creatures that form a genome
         """
-        self.initial_genome = initial_genome
+        self.creatures = creatures
 
     @abstractmethod
     def create_genome(self) -> Genome:
@@ -81,10 +80,12 @@ class GeneticAlgorithm(Algorithm):
         """
         population = self.create_population(population_size)
         for i in range(generation_limit):
+            print(f"Generation: {i}")
             population.sort(key=self.fitness)
 
             # if self.fitness(population[0]) < 5:
             #     break
+            print(self.fitness(population[0]))
 
             next_generation = population[:2]
             for j in range(int(len(population) / 2) - 1):
@@ -101,8 +102,8 @@ class GeneticAlgorithm(Algorithm):
 
 
 class SchedulingGeneticAlgorithm(GeneticAlgorithm):
-    def __init__(self, initial_genome: Genome, jobs: list[Job], resources: list[Resource]):
-        super().__init__(initial_genome)
+    def __init__(self, jobs: list[Job], resources: list[Resource]):
+        super().__init__(list(range(len(jobs))))
         self.jobs = [*jobs]
         self.resources = [*resources]
 
@@ -111,7 +112,7 @@ class SchedulingGeneticAlgorithm(GeneticAlgorithm):
         Creates a genome out of the creatures
         @return: genome
         """
-        return sample(self.initial_genome, len(self.initial_genome))
+        return sample(self.creatures, len(self.creatures))
 
     def create_population(self, amount: int) -> Population:
         """
@@ -173,7 +174,7 @@ class SchedulingGeneticAlgorithm(GeneticAlgorithm):
         @param genome: a genome
         @return: a fitness weight of the given genome
         """
-        scheduler = Scheduler([*self.resources])
+        scheduler = Scheduler(self.resources)
         queue = [job for _, job in sorted(zip(genome, self.jobs))]
         try:
             for job in queue:

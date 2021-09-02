@@ -41,14 +41,14 @@ class TestGeneticAlgorithm(TestCase):
 
     def test_selection(self):
         seed(2000)
-        population = [self.basic_problem.initial_genome, self.basic_problem.initial_genome * 3,
-                      self.basic_problem.initial_genome / 2]
+        population = [self.basic_problem.creatures, self.basic_problem.creatures * 3,
+                      self.basic_problem.creatures / 2]
         self.assertTrue(all([genome in population for genome in self.basic_problem.selection(population)]))
 
     def test_crossover(self):
         seed(2000)
-        a = self.basic_problem.initial_genome
-        b = self.basic_problem.initial_genome * 2 - 3
+        a = self.basic_problem.creatures
+        b = self.basic_problem.creatures * 2 - 3
         new_a, new_b = self.basic_problem.crossover(a, b)
         self.assertIsInstance(new_a, float)
         self.assertIsInstance(new_b, float)

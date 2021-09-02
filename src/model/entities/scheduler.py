@@ -10,7 +10,7 @@ from src.model.entities.resource import Resource
 
 class Scheduler:
     def __init__(self, resources: list[Resource]):
-        self.resources = resources
+        self.resources = [*resources]
         self.queue = []
 
     def calculate_queue_duration(self) -> float:

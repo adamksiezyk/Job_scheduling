@@ -37,7 +37,7 @@ class TestScheduler(TestCase):
                                duration=timedelta(hours=4), delay='0d', machine_id="M2", project=self.project)
         self.queue_init = [self.j1, self.j2, self.j3, self.j4]
 
-        self.scheduler = Scheduler(resources=[*self.resources_init])
+        self.scheduler = Scheduler(resources=self.resources_init)
         self.scheduler.queue = [*self.queue_init]
 
     def test_calculate_queue_duration(self):
