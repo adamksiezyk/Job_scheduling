@@ -80,19 +80,18 @@ class GeneticAlgorithm(Algorithm):
         """
         population = self.create_population(population_size)
         for i in range(generation_limit):
-            print(f"Generation: {i}")
             population.sort(key=self.fitness)
 
             # if self.fitness(population[0]) < 5:
             #     break
-            print(self.fitness(population[0]))
+            print(f"Generation: {i},\tfitness: {self.fitness(population[0])}")
 
             next_generation = population[:2]
             for j in range(int(len(population) / 2) - 1):
                 parents = self.selection(population)
                 offspring_a, offspring_b = self.crossover(*parents)
-                offspring_a = self.mutation(offspring_a, 3, 0.5)
-                offspring_b = self.mutation(offspring_b, 3, 0.5)
+                offspring_a = self.mutation(offspring_a, 15, 0.6)
+                offspring_b = self.mutation(offspring_b, 15, 0.6)
                 next_generation.append(offspring_a)
                 next_generation.append(offspring_b)
 

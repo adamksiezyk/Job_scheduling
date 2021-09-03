@@ -9,7 +9,7 @@ from src.model.entities.resource import Resource
 from src.model.entities.scheduler import Scheduler
 
 
-class MyTestCase(unittest.TestCase):
+class TestGeneticScheduler(unittest.TestCase):
     def setUp(self):
         self.r1_m1 = Resource(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 14), machine_id="M1",
                               worker_amount=1)

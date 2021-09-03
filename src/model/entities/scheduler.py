@@ -64,7 +64,7 @@ class Scheduler:
         @param start_dt: start datetime
         @return: list of available resources
         """
-        return [r for r in self.find_available_resources_for_machine(machine_id) if start_dt < r.end_dt]
+        return [r for r in self.resources if r.machine_id == machine_id and start_dt < r.end_dt]
 
     def find_earliest_resource(self, machine_id: str, start_dt: datetime) -> Optional[Resource]:
         """

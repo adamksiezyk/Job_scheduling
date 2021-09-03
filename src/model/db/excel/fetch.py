@@ -39,7 +39,7 @@ def fetch_jobs(series: pd.Series) -> list[Job]:
     durations = [timedelta(hours=duration) for i, (_, duration) in enumerate(jobs.iteritems()) if i % 2 == 1]
     delays = [str(delay) for i, (_, delay) in enumerate(jobs.iteritems()) if i % 2 == 0]
     return [Job(duration, str(machine), delay, project)
-            for machine, duration, delay in zip(machines, durations, delays)]
+            for machine, duration, delay in zip(machines, durations, delays) if duration > timedelta(0)]
 
 
 def fetch_all_resources(data_frame: pd.DataFrame) -> list[Resource]:
@@ -59,6 +59,6 @@ def fetch_resources(series: pd.Series) -> list[Resource]:
     """
     start_dt = series.iloc[0].to_pydatetime()
     end_dt = series.iloc[1].to_pydatetime()
-    resources = series.iloc[2:-1]
+    resources = series.iloc[2:]
     return [Resource(start_dt, end_dt, name, int(amount.split('x')[1]))
             for name, amount in resources.iteritems() for _ in range(int(amount.split('x')[0]))]
