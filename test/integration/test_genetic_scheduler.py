@@ -61,7 +61,7 @@ class TestGeneticScheduler(unittest.TestCase):
         self.assertCountEqual(self.creatures, self.genetic.mutation(self.creatures, 2, 0.8))
 
     def test_evolution(self):
-        solution = self.genetic.optimize(5, 10)
+        solution = self.genetic.optimize(5, 10, 2, 0.6)
         scheduler = Scheduler(self.resources)
         [scheduler.schedule_job(self.jobs[i]) for i in solution]
         print(f"Optimal solution: {solution}, duration {scheduler.calculate_queue_duration()}")

@@ -59,6 +59,6 @@ def fetch_resources(series: pd.Series) -> list[Resource]:
     """
     start_dt = series.iloc[0].to_pydatetime()
     end_dt = series.iloc[1].to_pydatetime()
-    resources = series.iloc[2:]
+    resources = series.iloc[2:-1]
     return [Resource(start_dt, end_dt, name, int(amount.split('x')[1]))
             for name, amount in resources.iteritems() for _ in range(int(amount.split('x')[0]))]

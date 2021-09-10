@@ -1,7 +1,4 @@
-from src.controller.controller import get_jobs, get_resources
-from src.model.algorithms.genetic import SchedulingGeneticAlgorithm
-from src.model.entities.scheduler import Scheduler
-from src.view.gantt_chart import gantt_chart
+from src.controller import controller
 
 
 def main() -> None:
@@ -9,21 +6,12 @@ def main() -> None:
     Main function, starts scheduling
     @return: None
     """
-    data_path = '..\\Linia_VA.xlsx'
-    sheet_name = 'Linia VA'
-    jobs = get_jobs(data_path, sheet_name)
-
-    resources_path = '..\\WorkCalendar.xlsx'
-    resources_sheet = 'Sheet1'
-    resources = get_resources(resources_path, resources_sheet)
-
-    algorithm = SchedulingGeneticAlgorithm(jobs, resources)
-    solution = algorithm.optimize(10, 20)
-    scheduler = Scheduler(resources)
-    [scheduler.schedule_job(jobs[i]) for i in solution]
-    print(f"Optimal solution: {solution}, takes: {scheduler.calculate_queue_duration()}")
-
-    gantt_chart(scheduler.queue)
+    path_jobs = '..\\Linia_VA.xlsx'
+    sheet_jobs = 'Linia VA'
+    path_resources = '..\\WorkCalendar.xlsx'
+    sheet_resources = 'Sheet1'
+    controller.schedule(path_jobs=path_jobs, sheet_jobs=sheet_jobs, path_resources=path_resources,
+                        sheet_resources=sheet_resources, population_size=10, generation_limit=20)
 
 
 if __name__ == "__main__":

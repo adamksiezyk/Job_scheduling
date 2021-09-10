@@ -71,11 +71,14 @@ class GeneticAlgorithm(Algorithm):
         @return: a fitness weight of the given genome
         """
 
-    def optimize(self, population_size: int, generation_limit: int) -> Genome:
+    def optimize(self, population_size: int, generation_limit: int, mutation_amount: int,
+                 mutation_probability: float) -> Genome:
         """
         Finds the optimal solution of the given problem
         @param population_size: the number of genomes in a population
         @param generation_limit: the maximum generations number
+        @param mutation_amount: the amount of creatures to mutate in a genome
+        @param mutation_probability: the probability of mutation of a single genome
         @return: the best population and the generation number
         """
         population = self.create_population(population_size)
@@ -90,8 +93,8 @@ class GeneticAlgorithm(Algorithm):
             for j in range(int(len(population) / 2) - 1):
                 parents = self.selection(population)
                 offspring_a, offspring_b = self.crossover(*parents)
-                offspring_a = self.mutation(offspring_a, 15, 0.6)
-                offspring_b = self.mutation(offspring_b, 15, 0.6)
+                offspring_a = self.mutation(offspring_a, mutation_amount, mutation_probability)
+                offspring_b = self.mutation(offspring_b, mutation_amount, mutation_probability)
                 next_generation.append(offspring_a)
                 next_generation.append(offspring_b)
 

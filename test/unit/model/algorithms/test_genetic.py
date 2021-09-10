@@ -59,6 +59,6 @@ class TestGeneticAlgorithm(TestCase):
 
     def test_evolution(self):
         seed(2000)
-        solution = self.basic_problem.optimize(5, 10)
+        solution = self.basic_problem.optimize(5, 10, 1, 0.5)
         print(f"min{{(x-2)^2}} = {solution}")
         self.assertIsInstance(solution, float)
