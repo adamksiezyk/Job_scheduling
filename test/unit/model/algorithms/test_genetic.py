@@ -1,3 +1,4 @@
+import math
 from random import seed, choices, randint, random, sample
 from unittest import TestCase
 
@@ -21,7 +22,7 @@ class BasicProblem(GeneticAlgorithm):
         return sum(genome * sample([-1, 1], 1)[0] * 3 / 4 + 2 for _ in range(amount) if random() < probability)
 
     def fitness(self, genome: Genome) -> float:
-        return (genome - 2) ** 2
+        return math.inf if genome == 2 else 1 / ((genome - 2) ** 2)
 
 
 class TestGeneticAlgorithm(TestCase):
@@ -37,7 +38,7 @@ class TestGeneticAlgorithm(TestCase):
         [self.assertIsInstance(genome, int) for genome in population]
 
     def test_fitness(self):
-        self.assertAlmostEqual(0.25, self.basic_problem.fitness(2.5))
+        self.assertAlmostEqual(4.0, self.basic_problem.fitness(2.5))
 
     def test_selection(self):
         seed(2000)

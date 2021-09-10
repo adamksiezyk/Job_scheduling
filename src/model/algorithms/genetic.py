@@ -1,4 +1,3 @@
-import math
 from abc import abstractmethod
 from random import sample, choices, random, randint
 from typing import TypeVar, Callable
@@ -83,7 +82,7 @@ class GeneticAlgorithm(Algorithm):
         """
         population = self.create_population(population_size)
         for i in range(generation_limit):
-            population.sort(key=self.fitness)
+            population.sort(key=self.fitness, reverse=True)
 
             # if self.fitness(population[0]) < 5:
             #     break
@@ -100,7 +99,7 @@ class GeneticAlgorithm(Algorithm):
 
             population = next_generation
 
-        return min(population, key=self.fitness)
+        return max(population, key=self.fitness)
 
 
 class SchedulingGeneticAlgorithm(GeneticAlgorithm):
@@ -182,5 +181,5 @@ class SchedulingGeneticAlgorithm(GeneticAlgorithm):
             for job in queue:
                 scheduler.schedule_job(job)
         except ValueError:
-            return math.inf
-        return scheduler.calculate_queue_duration()
+            return 0
+        return 1 / scheduler.calculate_queue_duration()

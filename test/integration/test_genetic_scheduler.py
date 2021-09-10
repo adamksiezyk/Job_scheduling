@@ -46,7 +46,7 @@ class TestGeneticScheduler(unittest.TestCase):
         [self.assertCountEqual(self.creatures, genome) for genome in self.genetic.create_population(10)]
 
     def test_fitness(self):
-        self.assertEqual(datetime(2021, 4, 1, 21, 20).timestamp(), self.genetic.fitness([2, 0, 1, 3]))
+        self.assertEqual(1 / datetime(2021, 4, 1, 21, 20).timestamp(), self.genetic.fitness([2, 0, 1, 3]))
 
     def test_selection(self):
         population = [sample(self.creatures, len(self.creatures)) for _ in range(10)]
