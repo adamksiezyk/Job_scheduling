@@ -12,7 +12,7 @@ Population = list[Genome]
 FitnessFunc = Callable[[Genome], float]
 
 
-class GeneticAlgorithm(Algorithm):
+class Genetic(Algorithm):
     def __init__(self, creatures: Genome):
         """
         @param creatures: list of creatures that form a genome
@@ -102,7 +102,7 @@ class GeneticAlgorithm(Algorithm):
         return max(population, key=self.fitness)
 
 
-class SchedulingGeneticAlgorithm(GeneticAlgorithm):
+class GeneticScheduler(Genetic):
     def __init__(self, jobs: list[Job], resources: list[Resource]):
         super().__init__(list(range(len(jobs))))
         self.jobs = [*jobs]

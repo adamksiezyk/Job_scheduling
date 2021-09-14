@@ -2,10 +2,10 @@ import math
 from random import seed, choices, randint, random, sample
 from unittest import TestCase
 
-from src.model.algorithms.genetic import Genome, Population, GeneticAlgorithm
+from src.model.algorithms.genetic import Genome, Population, Genetic
 
 
-class BasicProblem(GeneticAlgorithm):
+class BasicProblem(Genetic):
     def create_genome(self) -> Genome:
         return randint(-20, 20)
 

@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timedelta
 from random import sample
 
-from src.model.algorithms.genetic import SchedulingGeneticAlgorithm
+from src.model.algorithms.genetic import GeneticScheduler
 from src.model.entities.job import ScheduledJob
 from src.model.entities.project import Project
 from src.model.entities.resource import Resource
@@ -37,7 +37,7 @@ class TestGeneticScheduler(unittest.TestCase):
         self.jobs = [self.j1, self.j2, self.j3, self.j4]
         self.creatures = list(range(4))
 
-        self.genetic = SchedulingGeneticAlgorithm(jobs=self.jobs, resources=self.resources)
+        self.genetic = GeneticScheduler(jobs=self.jobs, resources=self.resources)
 
     def test_create_genome(self):
         self.assertCountEqual(self.creatures, self.genetic.create_genome())
