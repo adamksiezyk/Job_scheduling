@@ -1,4 +1,3 @@
-import math
 from abc import ABC, abstractmethod
 from typing import TypeVar
 
@@ -10,6 +9,14 @@ Solution = TypeVar("Solution")
 
 
 class Algorithm(ABC):
+    @abstractmethod
+    def fitness(self, sample_solution) -> float:
+        """
+        A fitness function that returns the fitness weight of the give sample solution
+        @param sample_solution: a sample solution
+        @return: a fitness weight of the given sample solution
+        """
+
     @abstractmethod
     def optimize(self, *args, **kwargs) -> Solution:
         """
@@ -33,7 +40,7 @@ class SchedulingAlgorithm(Algorithm, ABC):
         self.jobs = [*jobs]
         self.resources = [*resources]
 
-    def _calculate_queue_duration(self, queue: list[Job]) -> float:
+    def fitness(self, queue: list[Job]) -> float:
         """
         Returns the duration of the queue
         @param queue: list of jobs
@@ -44,5 +51,5 @@ class SchedulingAlgorithm(Algorithm, ABC):
             for job in queue:
                 scheduler.schedule_job(job)
         except ValueError:
-            return math.inf
-        return scheduler.calculate_queue_duration()
+            return 0
+        return 1 / scheduler.calculate_queue_duration()

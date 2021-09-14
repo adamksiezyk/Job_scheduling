@@ -1,4 +1,5 @@
 import functools
+from abc import ABC
 from typing import TypeVar, Callable
 
 import numpy as np
@@ -12,14 +13,13 @@ Element = TypeVar("Element")
 FitnessFunc = Callable[[list[Element]], float]
 
 
-class Neh(Algorithm):
+class Neh(Algorithm, ABC):
     """
     NEH algorithm
     """
 
-    def __init__(self, elements: list[Element], fitness: FitnessFunc):
+    def __init__(self, elements: list[Element]):
         self.elements = elements
-        self.fitness = fitness
 
     def optimize(self) -> list[Job]:
         """
@@ -38,7 +38,7 @@ class Neh(Algorithm):
         """
         durations = map(lambda j: self.fitness(lib.insert_to_list(previous_solution, j, element)),
                         range(len(previous_solution) + 1))
-        min_idx = int(np.argmin(durations))
+        min_idx = int(np.argmax(durations))
         return lib.insert_to_list(previous_solution, min_idx, element)
 
 
@@ -49,4 +49,4 @@ class NehScheduler(SchedulingAlgorithm, Neh):
 
     def __init__(self, jobs: list[Job], resources: list[Resource]):
         SchedulingAlgorithm.__init__(self, jobs=jobs, resources=resources)
-        Neh.__init__(self, elements=jobs, fitness=self._calculate_queue_duration)
+        Neh.__init__(self, elements=jobs)

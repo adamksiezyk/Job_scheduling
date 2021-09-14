@@ -1,18 +1,17 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from random import sample, choices, random, randint
 from typing import TypeVar, Callable
 
-from src.model.algorithms.algorithm import Algorithm
+from src.model.algorithms.algorithm import Algorithm, SchedulingAlgorithm
 from src.model.entities.job import Job
 from src.model.entities.resource import Resource
-from src.model.entities.scheduler import Scheduler
 
 Genome = TypeVar("Genome")
 Population = list[Genome]
 FitnessFunc = Callable[[Genome], float]
 
 
-class Genetic(Algorithm):
+class Genetic(Algorithm, ABC):
     def __init__(self, creatures: Genome):
         """
         @param creatures: list of creatures that form a genome
@@ -102,11 +101,10 @@ class Genetic(Algorithm):
         return max(population, key=self.fitness)
 
 
-class GeneticScheduler(Genetic):
+class GeneticScheduler(SchedulingAlgorithm, Genetic):
     def __init__(self, jobs: list[Job], resources: list[Resource]):
-        super().__init__(list(range(len(jobs))))
-        self.jobs = [*jobs]
-        self.resources = [*resources]
+        SchedulingAlgorithm.__init__(self, jobs=jobs, resources=resources)
+        Genetic.__init__(self, creatures=list(range(len(jobs))))
 
     def create_genome(self) -> Genome:
         """
@@ -175,11 +173,5 @@ class GeneticScheduler(Genetic):
         @param genome: a genome
         @return: a fitness weight of the given genome
         """
-        scheduler = Scheduler(self.resources)
         queue = [job for _, job in sorted(zip(genome, self.jobs))]
-        try:
-            for job in queue:
-                scheduler.schedule_job(job)
-        except ValueError:
-            return 0
-        return 1 / scheduler.calculate_queue_duration()
+        return SchedulingAlgorithm.fitness(self, queue)
