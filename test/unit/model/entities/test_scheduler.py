@@ -10,21 +10,24 @@ from src.model.entities.scheduler import Scheduler
 
 class TestScheduler(TestCase):
     def setUp(self) -> None:
-        self.empty_scheduler = Scheduler([])
+        self.empty_scheduler = Scheduler({})
 
-        self.r1_m1 = Resource(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 14), machine_id="M1",
+        self.r1_m1 = Resource(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 14),
                               worker_amount=2)
-        self.r2_m1 = Resource(start_dt=datetime(2021, 4, 1, 14), end_dt=datetime(2021, 4, 1, 22), machine_id="M1",
+        self.r2_m1 = Resource(start_dt=datetime(2021, 4, 1, 14), end_dt=datetime(2021, 4, 1, 22),
                               worker_amount=2)
-        self.r3_m1 = Resource(start_dt=datetime(2021, 4, 1, 22), end_dt=datetime(2021, 4, 2, 6), machine_id="M1",
+        self.r3_m1 = Resource(start_dt=datetime(2021, 4, 1, 22), end_dt=datetime(2021, 4, 2, 6),
                               worker_amount=2)
-        self.r1_m2 = Resource(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 14), machine_id="M2",
+        self.r1_m2 = Resource(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 14),
                               worker_amount=2)
-        self.r2_m2 = Resource(start_dt=datetime(2021, 4, 1, 14), end_dt=datetime(2021, 4, 1, 22), machine_id="M2",
+        self.r2_m2 = Resource(start_dt=datetime(2021, 4, 1, 14), end_dt=datetime(2021, 4, 1, 22),
                               worker_amount=2)
-        self.r3_m2 = Resource(start_dt=datetime(2021, 4, 1, 22), end_dt=datetime(2021, 4, 2, 6), machine_id="M2",
+        self.r3_m2 = Resource(start_dt=datetime(2021, 4, 1, 22), end_dt=datetime(2021, 4, 2, 6),
                               worker_amount=2)
-        self.resources_init = [self.r1_m1, self.r2_m1, self.r3_m1, self.r1_m2, self.r2_m2, self.r3_m2]
+        self.resources_init = {
+            "M1": [self.r1_m1, self.r2_m1, self.r3_m1],
+            "M2": [self.r1_m2, self.r2_m2, self.r3_m2]
+        }
 
         self.project = Project(start_dt=datetime(2021, 3, 28, 6), expiration_dt=datetime(2021, 4, 10), id="P1")
         self.j1 = ScheduledJob(start_dt=datetime(2021, 3, 28, 6), end_dt=datetime(2021, 3, 28, 14),
@@ -54,12 +57,14 @@ class TestScheduler(TestCase):
         s = ScheduledJob(duration=j.duration, delay=j.delay, machine_id=j.machine_id, project=j.project,
                          start_dt=datetime(2021, 4, 1, 14), end_dt=datetime(2021, 4, 1, 17))
         r = replace(self.r2_m1, start_dt=s.end_dt)
-        self.resources_init.remove(self.r2_m1)
-        self.resources_init.append(r)
+        used_resources = {
+            'M1': {self.resources_init['M1'].index(self.r2_m1): r},
+            'M2': {}
+        }
         self.queue_init.append(s)
 
         self.scheduler.schedule_job(j)
-        self.assertEqual(self.resources_init, self.scheduler.resources)
+        self.assertEqual(used_resources, self.scheduler.used_resources)
         self.assertEqual(self.queue_init, self.scheduler.queue)
 
     def test_schedule_job_one_resource_is_not_enough(self):
@@ -69,14 +74,18 @@ class TestScheduler(TestCase):
         s2 = ScheduledJob(duration=timedelta(hours=4), delay=j.delay, machine_id=j.machine_id, project=j.project,
                           start_dt=datetime(2021, 4, 1, 22), end_dt=datetime(2021, 4, 2, 0))
         r = replace(self.r3_m2, start_dt=s2.end_dt)
-        self.resources_init.remove(self.r2_m2)
-        self.resources_init.remove(self.r3_m2)
-        self.resources_init.append(r)
+        used_resources = {
+            'M1': {},
+            'M2': {
+                self.resources_init['M2'].index(self.r2_m2): None,
+                self.resources_init['M2'].index(self.r3_m2): r,
+            }
+        }
         self.queue_init.append(s1)
         self.queue_init.append(s2)
 
         self.scheduler.schedule_job(j)
-        self.assertEqual(self.resources_init, self.scheduler.resources)
+        self.assertEqual(used_resources, self.scheduler.used_resources)
         self.assertEqual(self.queue_init, self.scheduler.queue)
 
     def test_schedule_job_before_project_start(self):
@@ -90,35 +99,13 @@ class TestScheduler(TestCase):
         j = Job(duration=timedelta(hours=10), delay="1d", machine_id="M2", project=p)
         self.assertRaises(ValueError, self.scheduler.schedule_job, j)
 
-    def test_find_available_resources_for_machine_not_found(self):
-        self.assertEqual([], self.empty_scheduler.find_available_resources_for_machine("M1"))
-        self.assertEqual([], self.scheduler.find_available_resources_for_machine("M0"))
-
-    def test_find_available_resources_for_machine_found(self):
-        self.assertEqual([self.r1_m1, self.r2_m1, self.r3_m1],
-                         self.scheduler.find_available_resources_for_machine("M1"))
-        self.assertEqual([self.r1_m2, self.r2_m2, self.r3_m2],
-                         self.scheduler.find_available_resources_for_machine("M2"))
-
-    def test_find_available_resources_for_machine_and_dt_not_found(self):
-        self.assertEqual([], self.empty_scheduler.find_available_resources_for_machine_and_dt(
-            "M1", datetime(2021, 4, 1, 8)))
-        self.assertEqual([], self.scheduler.find_available_resources_for_machine_and_dt("M0", datetime(2021, 4, 1, 8)))
-        self.assertEqual([], self.scheduler.find_available_resources_for_machine_and_dt("M1", datetime(2021, 4, 3, 8)))
-
-    def test_find_available_resources_for_machine_and_dt_found(self):
-        self.assertEqual([self.r2_m1, self.r3_m1],
-                         self.scheduler.find_available_resources_for_machine_and_dt("M1", datetime(2021, 4, 1, 15)))
-        self.assertEqual([self.r3_m2],
-                         self.scheduler.find_available_resources_for_machine_and_dt("M2", datetime(2021, 4, 2, 3)))
-
     def test_find_earliest_resource_not_found(self):
-        self.assertEqual(None, self.empty_scheduler.find_earliest_resource("M1", datetime(2021, 3, 28, 8)))
-        self.assertEqual(None, self.scheduler.find_earliest_resource("M0", datetime(2021, 3, 28, 8)))
-        self.assertEqual(None, self.scheduler.find_earliest_resource("M1", datetime(2021, 4, 20, 8)))
+        self.assertEqual((None, None), self.empty_scheduler.find_earliest_resource("M1", datetime(2021, 3, 28, 8)))
+        self.assertEqual((None, None), self.scheduler.find_earliest_resource("M0", datetime(2021, 3, 28, 8)))
+        self.assertEqual((None, None), self.scheduler.find_earliest_resource("M1", datetime(2021, 4, 20, 8)))
 
     def test_find_earliest_resource_found(self):
-        self.assertEqual(self.r1_m1, self.scheduler.find_earliest_resource("M1", datetime(2021, 4, 1, 8)))
+        self.assertEqual((0, self.r1_m1), self.scheduler.find_earliest_resource("M1", datetime(2021, 4, 1, 8)))
 
     def find_fastest_start_dt(self):
         self.assertEqual(self.j1.project.start_dt, self.empty_scheduler.find_fastest_start_dt(self.j1))

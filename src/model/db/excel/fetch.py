@@ -1,3 +1,4 @@
+import functools
 from datetime import datetime, time, timedelta
 from functools import reduce
 
@@ -42,16 +43,20 @@ def fetch_jobs(series: pd.Series) -> list[Job]:
             for machine, duration, delay in zip(machines, durations, delays) if duration > timedelta(0)]
 
 
-def fetch_all_resources(data_frame: pd.DataFrame) -> list[Resource]:
+def fetch_all_resources(data_frame: pd.DataFrame) -> dict[str, list[Resource]]:
     """
     Fetches resources from dataframe
     @param data_frame: pandas dataframe
     @return: list of resources
     """
-    return reduce(lambda ans, row: ans + fetch_resources(row[1]), data_frame.iterrows(), [])
+    resources = {name: [] for name in data_frame.columns[2:-1]}
+    return functools.reduce(
+        lambda ans, elem: {key: value + fetch_resources(elem[1])[key] for key, value in ans.items()},
+        data_frame.iterrows(),
+        resources)
 
 
-def fetch_resources(series: pd.Series) -> list[Resource]:
+def fetch_resources(series: pd.Series) -> dict[str, list[Resource]]:
     """
     Fetches resources from series
     @param series: pandas series
@@ -60,5 +65,5 @@ def fetch_resources(series: pd.Series) -> list[Resource]:
     start_dt = series.iloc[0].to_pydatetime()
     end_dt = series.iloc[1].to_pydatetime()
     resources = series.iloc[2:-1]
-    return [Resource(start_dt, end_dt, name, int(amount.split('x')[1]))
-            for name, amount in resources.iteritems() for _ in range(int(amount.split('x')[0]))]
+    return {name: [Resource(start_dt=start_dt, end_dt=end_dt, worker_amount=int(amount.split('x')[1]))
+                   for _ in range(int(amount.split('x')[0]))] for name, amount in resources.iteritems()}

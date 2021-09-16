@@ -2,6 +2,7 @@ from itertools import groupby
 from random import choices
 
 import matplotlib.pyplot as plt
+
 from src.model.entities.job import ScheduledJob
 
 
@@ -11,9 +12,9 @@ def gantt_chart(jobs: list[ScheduledJob]) -> None:
     @param jobs: an ordered queue of scheduled jobs
     @return: None
     """
-    machine_group = groupby(sorted(jobs, key=lambda j: j.machine_id), key=lambda j: j.machine_id)
+    machine_group = groupby(sorted(jobs, key=lambda x: x.machine_id), key=lambda x: x.machine_id)
     machine_dict = {k: [v for v in vl] for k, vl in machine_group}
-    project_group = groupby(sorted(jobs, key=lambda j: j.project.id), key=lambda j: j.project.id)
+    project_group = groupby(sorted(jobs, key=lambda x: x.project.id), key=lambda x: x.project.id)
     project_dict = {k: [v for v in vl] for k, vl in project_group}
     colors = {p_id: tuple(x / 10 for x in choices(range(10), k=3)) for p_id in project_dict.keys()}
     fig, gnt = plt.subplots()

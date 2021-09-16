@@ -1,14 +1,13 @@
+import functools
 import time
+from datetime import timedelta
+
+import pandas as pd
+
 import lib
 import load_data
 import neh
-import plot
-import json
-import ast
-import functools
-import pandas as pd
-from copy import deepcopy
-from datetime import datetime, timedelta
+
 
 # Parse loaded JSON machine string to desired format
 
@@ -17,14 +16,17 @@ def parse_machines(machine_dict):
     # machine_string_format = machine_string.replace("'", '"')
     # machine_dict = json.loads(machine_string_format)
     machine_amount = {date:
-                      {machine: [0 if shift == 'x' else int(shift.split('x')[0]) for shift in machine_dict[date][machine]]
-                       for machine in machine_dict[date]}
+                          {machine: [0 if shift == 'x' else int(shift.split('x')[0]) for shift in
+                                     machine_dict[date][machine]]
+                           for machine in machine_dict[date]}
                       for date in machine_dict}
     workers_amount = {date:
-                      {machine: [0 if shift == 'x' else float(shift.split('x')[1]) for shift in machine_dict[date][machine]]
-                       for machine in machine_dict[date]}
+                          {machine: [0 if shift == 'x' else float(shift.split('x')[1]) for shift in
+                                     machine_dict[date][machine]]
+                           for machine in machine_dict[date]}
                       for date in machine_dict}
     return machine_amount, workers_amount
+
 
 # Parse loaded jobs data structure to desired format
 
@@ -43,6 +45,7 @@ def parse_jobs(jobs):
     else:
         raise RuntimeError('Wrong jobs format')
 
+
 # Helfer functioin for parsing machines in jobs
 
 
@@ -60,6 +63,7 @@ def parse_machines_in_job(machines):
                 for machine, (time, delay) in machines.items()}
     else:
         raise RuntimeError('Wrong machines format')
+
 
 # Schedule jobs
 
@@ -114,4 +118,4 @@ if __name__ == '__main__':
     # Plot the schedule
     # plot.plot(c_matrix)
     # Display exec. time
-    print('\n', t2-t1)
+    print('\n', t2 - t1)

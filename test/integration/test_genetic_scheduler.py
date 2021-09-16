@@ -11,19 +11,22 @@ from src.model.entities.scheduler import Scheduler
 
 class TestGeneticScheduler(unittest.TestCase):
     def setUp(self):
-        self.r1_m1 = Resource(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 14), machine_id="M1",
+        self.r1_m1 = Resource(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 14),
                               worker_amount=1)
-        self.r2_m1 = Resource(start_dt=datetime(2021, 4, 1, 14), end_dt=datetime(2021, 4, 1, 22), machine_id="M1",
+        self.r2_m1 = Resource(start_dt=datetime(2021, 4, 1, 14), end_dt=datetime(2021, 4, 1, 22),
                               worker_amount=2)
-        self.r3_m1 = Resource(start_dt=datetime(2021, 4, 1, 22), end_dt=datetime(2021, 4, 2, 6), machine_id="M1",
+        self.r3_m1 = Resource(start_dt=datetime(2021, 4, 1, 22), end_dt=datetime(2021, 4, 2, 6),
                               worker_amount=3)
-        self.r1_m2 = Resource(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 14), machine_id="M2",
+        self.r1_m2 = Resource(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 14),
                               worker_amount=3)
-        self.r2_m2 = Resource(start_dt=datetime(2021, 4, 1, 14), end_dt=datetime(2021, 4, 1, 22), machine_id="M2",
+        self.r2_m2 = Resource(start_dt=datetime(2021, 4, 1, 14), end_dt=datetime(2021, 4, 1, 22),
                               worker_amount=2)
-        self.r3_m2 = Resource(start_dt=datetime(2021, 4, 1, 22), end_dt=datetime(2021, 4, 2, 6), machine_id="M2",
+        self.r3_m2 = Resource(start_dt=datetime(2021, 4, 1, 22), end_dt=datetime(2021, 4, 2, 6),
                               worker_amount=2)
-        self.resources = [self.r1_m1, self.r2_m1, self.r3_m1, self.r1_m2, self.r2_m2, self.r3_m2]
+        self.resources = {
+            "M1": [self.r1_m1, self.r2_m1],
+            "M2": [self.r1_m2, self.r2_m2, self.r3_m2]
+        }
 
         self.project = Project(start_dt=datetime(2021, 3, 28, 6), expiration_dt=datetime(2021, 4, 10), id="P1")
         self.j1 = ScheduledJob(start_dt=datetime(2021, 3, 28, 6), end_dt=datetime(2021, 3, 28, 14),
@@ -46,7 +49,7 @@ class TestGeneticScheduler(unittest.TestCase):
         [self.assertCountEqual(self.creatures, genome) for genome in self.genetic.create_population(10)]
 
     def test_fitness(self):
-        self.assertEqual(1 / datetime(2021, 4, 1, 21, 20).timestamp(), self.genetic.fitness([2, 0, 1, 3]))
+        self.assertEqual(1 / datetime(2021, 4, 2, 0).timestamp(), self.genetic.fitness([2, 0, 1, 3]))
 
     def test_selection(self):
         population = [sample(self.creatures, len(self.creatures)) for _ in range(10)]

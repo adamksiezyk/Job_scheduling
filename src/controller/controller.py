@@ -21,7 +21,7 @@ def get_jobs(path, sheet) -> list[Job]:
     return jobs
 
 
-def get_resources(path, sheet) -> list[Resource]:
+def get_resources(path, sheet) -> dict[str, list[Resource]]:
     """
     Loads resources and represents them
     @param path: path to xlsx file
@@ -53,9 +53,9 @@ def schedule_genetic(path_jobs: str, sheet_jobs: str, path_resources: str, sheet
                                   mutation_amount=15, mutation_probability=0.6)
     scheduler = Scheduler(resources)
     [scheduler.schedule_job(jobs[i]) for i in solution]
-    print(f"Optimal solution: {solution}, takes: {scheduler.calculate_queue_duration()}")
+    print(f"Optimal solution takes: {scheduler.calculate_queue_duration()}")
 
-    gantt_chart(scheduler.queue)
+    # gantt_chart(scheduler.queue)
     return scheduler
 
 
@@ -75,7 +75,7 @@ def schedule_brute_force(path_jobs: str, sheet_jobs: str, path_resources: str, s
     solution = algorithm.optimize()
     scheduler = Scheduler(resources)
     [scheduler.schedule_job(job) for job in solution]
-    print(f"Optimal solution: {solution}, takes: {scheduler.calculate_queue_duration()}")
+    print(f"Optimal solution takes: {scheduler.calculate_queue_duration()}")
 
     gantt_chart(scheduler.queue)
     return scheduler
@@ -97,7 +97,7 @@ def schedule_neh(path_jobs: str, sheet_jobs: str, path_resources: str, sheet_res
     solution = algorithm.optimize()
     scheduler = Scheduler(resources)
     [scheduler.schedule_job(job) for job in solution]
-    print(f"Optimal solution: {solution}, takes: {scheduler.calculate_queue_duration()}")
+    print(f"Optimal solution takes: {scheduler.calculate_queue_duration()}")
 
     gantt_chart(scheduler.queue)
     return scheduler

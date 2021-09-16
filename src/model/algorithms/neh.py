@@ -19,14 +19,14 @@ class Neh(Algorithm, ABC):
     """
 
     def __init__(self, elements: list[Element]):
-        self.elements = elements
+        self.ELEMENTS = elements
 
     def optimize(self) -> list[Job]:
         """
         Returns the best solution
         @return: best solution
         """
-        jobs = sorted(self.elements, key=lambda j: j.duration, reverse=True)
+        jobs = sorted(self.ELEMENTS, key=lambda j: j.duration, reverse=True)
         return functools.reduce(self.__find_best_solution, jobs, [])
 
     def __find_best_solution(self, previous_solution: list[Element], element: Element) -> list[Element]:
@@ -47,6 +47,6 @@ class NehScheduler(SchedulingAlgorithm, Neh):
     NEH scheduler
     """
 
-    def __init__(self, jobs: list[Job], resources: list[Resource]):
+    def __init__(self, jobs: list[Job], resources: dict[str, list[Resource]]):
         SchedulingAlgorithm.__init__(self, jobs=jobs, resources=resources)
         Neh.__init__(self, elements=jobs)

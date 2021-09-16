@@ -17,16 +17,15 @@ class BruteForce(Algorithm, ABC):
     Brute force algorithm
     """
 
-    def __init__(self, elements: list[Element], fitness: FitnessFunc):
-        self.elements = elements
-        self.fitness = fitness
+    def __init__(self, elements: list[Element]):
+        self.ELEMENTS = elements
 
     def optimize(self) -> list[Element]:
         """
         Returns the best solution
         @return: best solution
         """
-        possible_solutions = list(permutations(self.elements))
+        possible_solutions = list(permutations(self.ELEMENTS))
         durations = map(self.fitness, possible_solutions)
         min_idx = int(np.argmax(durations))
         return possible_solutions[min_idx]
@@ -37,6 +36,6 @@ class BruteForceScheduler(SchedulingAlgorithm, BruteForce):
     Brute force scheduler
     """
 
-    def __init__(self, jobs: list[Job], resources: list[Resource]):
+    def __init__(self, jobs: list[Job], resources: dict[str, list[Resource]]):
         SchedulingAlgorithm.__init__(self, jobs=jobs, resources=resources)
         BruteForce.__init__(self, elements=jobs)

@@ -9,7 +9,6 @@ class Resource:
     """
     start_dt: datetime  # Resource start date
     end_dt: datetime  # Resource end date
-    machine_id: str  # Resource machine ID
     worker_amount: int  # Resource workers amount
 
     def __post_init__(self):

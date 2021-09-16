@@ -67,58 +67,75 @@ class TestFetch(unittest.TestCase):
         self.assertEqual([j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13], fetch_all_jobs(self.schedule))
 
     def test_fetch_resources(self):
-        r1 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14), machine_id="1.VA.NAB",
+        r1 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14),
                       worker_amount=2)
-        r2 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14), machine_id="2.VA.RS",
+        r2 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14),
                       worker_amount=1)
-        r3 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14), machine_id="3.VA.BKOM",
+        r3 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14),
                       worker_amount=1)
-        r4 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14), machine_id="4.VA.MKOM",
+        r4 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14),
                       worker_amount=1)
-        r5 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14), machine_id="5.VA.KOMWKŁ",
+        r5 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14),
                       worker_amount=1)
-        r6 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14), machine_id="6.VA.MKONC",
+        r6 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14),
                       worker_amount=2)
-        r7 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14), machine_id="7.VA.OWIE",
+        r7 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14),
                       worker_amount=1)
-        r8 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14), machine_id="8.VA.MBAT",
+        r8 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14),
                       worker_amount=3)
-        self.assertEqual([r1] + [r2] * 6 + [r3] * 4 + [r4] * 2 + [r5] * 4 + [r6] * 2 + [r7] * 1 + [r8] * 2,
-                         fetch_resources(self.resources.iloc[0]))
+        resources = {
+            "1.VA.NAB": [r1],
+            "2.VA.RS": [r2] * 6,
+            "3.VA.BKOM": [r3] * 4,
+            "4.VA.MKOM": [r4] * 2,
+            "5.VA.KOMWKŁ": [r5] * 4,
+            "6.VA.MKONC": [r6] * 2,
+            "7.VA.OWIE": [r7],
+            "8.VA.MBAT": [r8] * 2,
+        }
+        self.assertEqual(resources, fetch_resources(self.resources.iloc[0]))
 
     def test_fetch_all_resources(self):
-        r1 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14), machine_id="1.VA.NAB",
+        r1 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14),
                       worker_amount=2)
-        r2 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14), machine_id="2.VA.RS",
+        r2 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14),
                       worker_amount=1)
-        r3 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14), machine_id="3.VA.BKOM",
+        r3 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14),
                       worker_amount=1)
-        r4 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14), machine_id="4.VA.MKOM",
+        r4 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14),
                       worker_amount=1)
-        r5 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14), machine_id="5.VA.KOMWKŁ",
+        r5 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14),
                       worker_amount=1)
-        r6 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14), machine_id="6.VA.MKONC",
+        r6 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14),
                       worker_amount=2)
-        r7 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14), machine_id="7.VA.OWIE",
+        r7 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14),
                       worker_amount=1)
-        r8 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14), machine_id="8.VA.MBAT",
+        r8 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14),
                       worker_amount=3)
-        r9 = Resource(start_dt=datetime(2020, 11, 12, 14), end_dt=datetime(2020, 11, 12, 22), machine_id="1.VA.NAB",
+        r9 = Resource(start_dt=datetime(2020, 11, 12, 14), end_dt=datetime(2020, 11, 12, 22),
                       worker_amount=2)
-        r10 = Resource(start_dt=datetime(2020, 11, 12, 14), end_dt=datetime(2020, 11, 12, 22), machine_id="2.VA.RS",
+        r10 = Resource(start_dt=datetime(2020, 11, 12, 14), end_dt=datetime(2020, 11, 12, 22),
                        worker_amount=1)
-        r11 = Resource(start_dt=datetime(2020, 11, 12, 14), end_dt=datetime(2020, 11, 12, 22), machine_id="3.VA.BKOM",
+        r11 = Resource(start_dt=datetime(2020, 11, 12, 14), end_dt=datetime(2020, 11, 12, 22),
                        worker_amount=1)
-        r12 = Resource(start_dt=datetime(2020, 11, 12, 14), end_dt=datetime(2020, 11, 12, 22), machine_id="4.VA.MKOM",
+        r12 = Resource(start_dt=datetime(2020, 11, 12, 14), end_dt=datetime(2020, 11, 12, 22),
                        worker_amount=1)
-        r13 = Resource(start_dt=datetime(2020, 11, 12, 14), end_dt=datetime(2020, 11, 12, 22), machine_id="5.VA.KOMWKŁ",
+        r13 = Resource(start_dt=datetime(2020, 11, 12, 14), end_dt=datetime(2020, 11, 12, 22),
                        worker_amount=1)
-        r14 = Resource(start_dt=datetime(2020, 11, 12, 14), end_dt=datetime(2020, 11, 12, 22), machine_id="6.VA.MKONC",
+        r14 = Resource(start_dt=datetime(2020, 11, 12, 14), end_dt=datetime(2020, 11, 12, 22),
                        worker_amount=2)
-        r15 = Resource(start_dt=datetime(2020, 11, 12, 14), end_dt=datetime(2020, 11, 12, 22), machine_id="7.VA.OWIE",
+        r15 = Resource(start_dt=datetime(2020, 11, 12, 14), end_dt=datetime(2020, 11, 12, 22),
                        worker_amount=1)
-        r16 = Resource(start_dt=datetime(2020, 11, 12, 14), end_dt=datetime(2020, 11, 12, 22), machine_id="8.VA.MBAT",
+        r16 = Resource(start_dt=datetime(2020, 11, 12, 14), end_dt=datetime(2020, 11, 12, 22),
                        worker_amount=3)
-        self.assertEqual([r1] + [r2] * 6 + [r3] * 4 + [r4] * 2 + [r5] * 4 + [r6] * 2 + [r7] * 1 + [r8] * 2 +
-                         [r9] + [r10] * 6 + [r11] * 4 + [r12] * 2 + [r13] * 4 + [r14] * 2 + [r15] * 1 + [r16] * 2,
-                         fetch_all_resources(self.resources))
+        resources = {
+            "1.VA.NAB": [r1, r9],
+            "2.VA.RS": [r2] * 6 + [r10] * 6,
+            "3.VA.BKOM": [r3] * 4 + [r11] * 4,
+            "4.VA.MKOM": [r4] * 2 + [r12] * 2,
+            "5.VA.KOMWKŁ": [r5] * 4 + [r13] * 4,
+            "6.VA.MKONC": [r6] * 2 + [r14] * 2,
+            "7.VA.OWIE": [r7, r15],
+            "8.VA.MBAT": [r8] * 2 + [r16] * 2
+        }
+        self.assertEqual(resources, fetch_all_resources(self.resources))

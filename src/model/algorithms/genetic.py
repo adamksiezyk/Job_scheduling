@@ -16,7 +16,7 @@ class Genetic(Algorithm, ABC):
         """
         @param creatures: list of creatures that form a genome
         """
-        self.creatures = creatures
+        self.CREATURES = creatures
 
     @abstractmethod
     def create_genome(self) -> Genome:
@@ -102,7 +102,7 @@ class Genetic(Algorithm, ABC):
 
 
 class GeneticScheduler(SchedulingAlgorithm, Genetic):
-    def __init__(self, jobs: list[Job], resources: list[Resource]):
+    def __init__(self, jobs: list[Job], resources: dict[str, list[Resource]]):
         SchedulingAlgorithm.__init__(self, jobs=jobs, resources=resources)
         Genetic.__init__(self, creatures=list(range(len(jobs))))
 
@@ -111,7 +111,7 @@ class GeneticScheduler(SchedulingAlgorithm, Genetic):
         Creates a genome out of the creatures
         @return: genome
         """
-        return sample(self.creatures, len(self.creatures))
+        return sample(self.CREATURES, len(self.CREATURES))
 
     def create_population(self, amount: int) -> Population:
         """
@@ -173,5 +173,5 @@ class GeneticScheduler(SchedulingAlgorithm, Genetic):
         @param genome: a genome
         @return: a fitness weight of the given genome
         """
-        queue = [job for _, job in sorted(zip(genome, self.jobs))]
+        queue = [self.JOBS[i] for i in genome]
         return SchedulingAlgorithm.fitness(self, queue)

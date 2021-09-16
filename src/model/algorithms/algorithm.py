@@ -32,13 +32,13 @@ class SchedulingAlgorithm(Algorithm, ABC):
     Base class for a Scheduling Algorithm
     """
 
-    def __init__(self, jobs: list[Job], resources: list[Resource]):
+    def __init__(self, jobs: list[Job], resources: dict[str, list[Resource]]):
         """
         @param jobs: list of jobs to schedule
         @param resources: list of available resources
         """
-        self.jobs = [*jobs]
-        self.resources = [*resources]
+        self.JOBS = jobs
+        self.RESOURCES = resources
 
     def fitness(self, queue: list[Job]) -> float:
         """
@@ -46,7 +46,7 @@ class SchedulingAlgorithm(Algorithm, ABC):
         @param queue: list of jobs
         @return: duration of the queue
         """
-        scheduler = Scheduler([*self.resources])
+        scheduler = Scheduler(self.RESOURCES)
         try:
             for job in queue:
                 scheduler.schedule_job(job)
