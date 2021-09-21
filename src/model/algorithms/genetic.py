@@ -5,6 +5,7 @@ from typing import TypeVar, Callable
 from src.model.algorithms.algorithm import Algorithm, SchedulingAlgorithm
 from src.model.entities.job import Job
 from src.model.entities.resource import Resource
+from src.utils import lib
 
 Genome = TypeVar("Genome")
 Population = list[Genome]
@@ -34,10 +35,11 @@ class Genetic(Algorithm, ABC):
         """
 
     @abstractmethod
-    def selection(self, population: Population, amount: int = 2) -> list[Genome]:
+    def selection(self, population: Population, weights: list[float], amount: int = 2) -> list[Genome]:
         """
         Returns the amount best genomes with the probability defined by the fitness function
         @param population: a population
+        @param weights: a list of weights of the genomes in a population
         @param amount: amount of genomes to return
         @return: amount best genomes
         """
@@ -81,15 +83,18 @@ class Genetic(Algorithm, ABC):
         """
         population = self.create_population(population_size)
         for i in range(generation_limit):
-            population.sort(key=self.fitness, reverse=True)
+            fitness_values = [self.fitness(genome) for genome in population]
+            sort = sorted(zip(fitness_values, population), reverse=True)
+            population = list(lib.get_column(1)(sort))
+            fitness_values = list(lib.get_column(0)(sort))
 
             # if self.fitness(population[0]) < 5:
             #     break
-            print(f"Generation: {i},\tfitness: {self.fitness(population[0])}")
+            print(f"Generation: {i},\tfitness: {fitness_values[0]}")
 
             next_generation = population[:2]
-            for j in range(int(len(population) / 2) - 1):
-                parents = self.selection(population)
+            for j in range(int(population_size / 2) - 1):
+                parents = self.selection(population, fitness_values)
                 offspring_a, offspring_b = self.crossover(*parents)
                 offspring_a = self.mutation(offspring_a, mutation_amount, mutation_probability)
                 offspring_b = self.mutation(offspring_b, mutation_amount, mutation_probability)
@@ -121,14 +126,15 @@ class GeneticScheduler(SchedulingAlgorithm, Genetic):
         """
         return [self.create_genome() for _ in range(amount)]
 
-    def selection(self, population: Population, amount: int = 2) -> list[Genome]:
+    def selection(self, population: Population, weights: list[float], amount: int = 2) -> list[Genome]:
         """
         Returns the amount best genomes with the probability defined by the fitness function
         @param population: a population
+        @param weights: a list of weights of the genomes in the population
         @param amount: amount of genomes to return
         @return: amount best genomes
         """
-        return choices(population=population, weights=[self.fitness(genome) for genome in population], k=amount)
+        return choices(population=population, weights=weights, k=amount)
 
     def crossover(self, a: Genome, b: Genome) -> tuple[Genome, Genome]:
         """

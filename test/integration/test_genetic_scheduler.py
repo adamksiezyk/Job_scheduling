@@ -53,7 +53,9 @@ class TestGeneticScheduler(unittest.TestCase):
 
     def test_selection(self):
         population = [sample(self.creatures, len(self.creatures)) for _ in range(10)]
-        [self.assertCountEqual(self.creatures, genome) for genome in self.genetic.selection(population)]
+        fitness_values = [self.genetic.fitness(genome) for genome in population]
+        [self.assertCountEqual(self.creatures, genome) for genome in self.genetic.selection(population,
+                                                                                            fitness_values)]
 
     def test_crossover(self):
         a = self.creatures

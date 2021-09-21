@@ -12,8 +12,8 @@ class BasicProblem(Genetic):
     def create_population(self, amount: int) -> Population:
         return [self.create_genome() for _ in range(amount)]
 
-    def selection(self, population: Population, amount: int = 2) -> list[Genome]:
-        return choices(population=population, weights=[self.fitness(genome) for genome in population], k=amount)
+    def selection(self, population: Population, weights: list[float], amount: int = 2) -> list[Genome]:
+        return choices(population=population, weights=weights, k=amount)
 
     def crossover(self, a: Genome, b: Genome) -> tuple[Genome, Genome]:
         return ((a / 2) + b) / 2, ((b / 2) + a) / 2
@@ -44,7 +44,9 @@ class TestGeneticAlgorithm(TestCase):
         seed(2000)
         population = [self.basic_problem.CREATURES, self.basic_problem.CREATURES * 3,
                       self.basic_problem.CREATURES / 2]
-        self.assertTrue(all([genome in population for genome in self.basic_problem.selection(population)]))
+        fitness_values = [self.basic_problem.fitness(genome) for genome in population]
+        self.assertTrue(all([genome in population for genome in self.basic_problem.selection(population,
+                                                                                             fitness_values)]))
 
     def test_crossover(self):
         seed(2000)

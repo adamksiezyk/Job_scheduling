@@ -1,7 +1,10 @@
+import cProfile
 import copy
 import functools
+import io
+import pstats
 import time
-from typing import TypeVar, Callable, Any
+from typing import TypeVar, Callable, Any, Iterable
 
 T = TypeVar('T')
 R = TypeVar('R')
@@ -89,14 +92,14 @@ def flatten(s: list) -> list:
     return s[:1] + flatten(s[1:])
 
 
-def get_column(col: int) -> Callable[[list[list[T]]], list[T]]:
+def get_column(col: int) -> Callable[[Iterable[Iterable[T]]], Iterable[T]]:
     """
     Returns a callable that returns the column from a given matrix
     @param col: column
     @return: callable
     """
 
-    def inner(matrix: list[list[T]]) -> list[T]:
+    def inner(matrix: Iterable[Iterable[T]]) -> Iterable[T]:
         """
         Returns the column from the given matrix
         @param matrix: matrix
@@ -177,3 +180,25 @@ def timer(func: Callable[[...], T]) -> Callable[[...], T]:
         return res
 
     return wrapper
+
+
+def profile(func: Callable[[...], T]) -> Callable[[...], T]:
+    """
+    A decorator that profiles a function with cProfile
+    @param func: a function to profile
+    @return: the function with a profiler
+    """
+
+    def inner(*args, **kwargs) -> T:
+        pr = cProfile.Profile()
+        pr.enable()
+        ret = func(*args, **kwargs)
+        pr.disable()
+        s = io.StringIO()
+        sort_by = 'cumulative'
+        ps = pstats.Stats(pr, stream=s).sort_stats(sort_by)
+        ps.print_stats()
+        print(s.getvalue())
+        return ret
+
+    return inner
