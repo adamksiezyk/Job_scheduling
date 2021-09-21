@@ -45,7 +45,7 @@ def schedule_genetic(path_jobs: str, sheet_jobs: str, path_resources: str, sheet
     @param generation_limit: limit of generations
     @return: scheduler with scheduled jobs
     """
-    jobs = get_jobs(path_jobs, sheet_jobs)[:50]
+    jobs = get_jobs(path_jobs, sheet_jobs)
     resources = get_resources(path_resources, sheet_resources)
 
     algorithm = GeneticScheduler(jobs, resources)
