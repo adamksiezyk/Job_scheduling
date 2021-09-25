@@ -16,6 +16,7 @@ class Job:
     machine_id: str  # Job's machine ID
     delay: str  # Job delay after finish
     project: Project  # Job's project ID
+    previous_machines: list[str]  # List of previous machine IDs
 
 
 @dataclass(frozen=True)

@@ -40,16 +40,21 @@ class Scheduler:
             # This resource is enough
             new_resource = replace(fastest_resource, start_dt=job_end_dt)
             self.used_resources[job.machine_id][fastest_resource_idx] = new_resource
-            scheduled_job = ScheduledJob(job.duration, job.machine_id, job.delay, job.project, job_end_dt, job_start_dt)
+            scheduled_job = ScheduledJob(duration=job.duration, machine_id=job.machine_id,
+                                         previous_machines=job.previous_machines, delay=job.delay, project=job.project,
+                                         end_dt=job_end_dt, start_dt=job_start_dt)
             self.queue.append(scheduled_job)
         else:
             # Next resource is needed
             self.used_resources[job.machine_id][fastest_resource_idx] = None
             new_job_end_dt = fastest_resource.end_dt
             new_duration = (new_job_end_dt - job_start_dt) * fastest_resource.worker_amount
-            scheduled_job = ScheduledJob(new_duration, job.machine_id, '0d', job.project, new_job_end_dt, job_start_dt)
+            scheduled_job = ScheduledJob(duration=new_duration, machine_id=job.machine_id,
+                                         previous_machines=job.previous_machines, delay='0d', project=job.project,
+                                         end_dt=new_job_end_dt, start_dt=job_start_dt)
             self.queue.append(scheduled_job)
-            new_job = Job(job.duration - new_duration, job.machine_id, job.delay, job.project)
+            new_job = Job(duration=job.duration - new_duration, machine_id=job.machine_id,
+                          previous_machines=job.previous_machines, delay=job.delay, project=job.project)
             self.schedule_job(new_job)
 
     def get_available_resource(self, machine_id: str, index: int, start_dt: datetime) -> Optional[Resource]:
@@ -80,23 +85,23 @@ class Scheduler:
         @param job: job to schedule
         @return: fastest start datetime
         """
-        previous_job = self.find_last_scheduled_job(job.project.id)
+        previous_job = self.find_last_scheduled_job(job)
         previous_job_end = datetime.min if previous_job is None else previous_job.parse_delay()
         return max(previous_job_end, job.project.start_dt)
 
-    def find_last_scheduled_job(self, project_id: str) -> Optional[ScheduledJob]:
+    def find_last_scheduled_job(self, job: Job) -> Optional[ScheduledJob]:
         """
         Returns the last scheduled job for the give project
-        @param project_id: project ID
+        @param job: current job
         @return: last scheduled job
         """
-        previous_jobs = self.find_scheduled_jobs(project_id)
+        previous_jobs = self.find_jobs_to_wait_for(job)
         return max(previous_jobs) if previous_jobs else None
 
-    def find_scheduled_jobs(self, project_id: str) -> list[ScheduledJob]:
+    def find_jobs_to_wait_for(self, job: Job) -> list[ScheduledJob]:
         """
         Returns the scheduled jobs for the given project
-        @param project_id: project ID
+        @param job: current Job
         @return: list of scheduled jobs
         """
-        return [j for j in self.queue if j.project.id == project_id]
+        return [j for j in self.queue if j.project.id == job.project.id and j.machine_id in job.previous_machines]

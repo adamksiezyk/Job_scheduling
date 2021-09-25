@@ -39,7 +39,17 @@ def fetch_jobs(series: pd.Series) -> list[Job]:
     machines = [str(name) for i, (name, _) in enumerate(jobs.iteritems()) if i % 2 == 1]
     durations = [timedelta(hours=duration) for i, (_, duration) in enumerate(jobs.iteritems()) if i % 2 == 1]
     delays = [str(delay) for i, (_, delay) in enumerate(jobs.iteritems()) if i % 2 == 0]
-    return [Job(duration, str(machine), delay, project)
+    previous_machines = {
+        '1.VA.NAB': [],
+        '2.VA.RS': ['1.VA.NAB'],
+        '3.VA.BKOM': [],
+        '4.VA.MKOM': ['3.VA.BKOM'],
+        '5.VA.KOMWKŁ': ['1.VA.NAB', '2.VA.RS', '3.VA.BKOM', '4.VA.MKOM'],
+        '6.VA.MKONC': ['1.VA.NAB', '2.VA.RS', '3.VA.BKOM', '4.VA.MKOM', '5.VA.KOMWKŁ'],
+        '7.VA.OWIE': ['1.VA.NAB', '2.VA.RS', '3.VA.BKOM', '4.VA.MKOM', '5.VA.KOMWKŁ', '6.VA.MKONC'],
+        '8.VA.MBAT': ['1.VA.NAB', '2.VA.RS', '3.VA.BKOM', '4.VA.MKOM', '5.VA.KOMWKŁ', '6.VA.MKONC', '7.VA.OWIE']
+    }
+    return [Job(duration, str(machine), delay, project, previous_machines[machine])
             for machine, duration, delay in zip(machines, durations, delays) if duration > timedelta(0)]
 
 

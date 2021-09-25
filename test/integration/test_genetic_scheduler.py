@@ -30,13 +30,17 @@ class TestGeneticScheduler(unittest.TestCase):
 
         self.project = Project(start_dt=datetime(2021, 3, 28, 6), expiration_dt=datetime(2021, 4, 10), id="P1")
         self.j1 = ScheduledJob(start_dt=datetime(2021, 3, 28, 6), end_dt=datetime(2021, 3, 28, 14),
-                               duration=timedelta(hours=8), delay='0d', machine_id="M1", project=self.project)
+                               duration=timedelta(hours=8), delay='0d', machine_id="M1", project=self.project,
+                               previous_machines=["M1", "M2"])
         self.j2 = ScheduledJob(start_dt=datetime(2021, 3, 28, 6), end_dt=datetime(2021, 3, 28, 14),
-                               duration=timedelta(hours=8), delay='0d', machine_id="M2", project=self.project)
+                               duration=timedelta(hours=8), delay='0d', machine_id="M2", project=self.project,
+                               previous_machines=["M1", "M2"])
         self.j3 = ScheduledJob(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 14),
-                               duration=timedelta(hours=8), delay='0d', machine_id="M1", project=self.project)
+                               duration=timedelta(hours=8), delay='0d', machine_id="M1", project=self.project,
+                               previous_machines=["M1", "M2"])
         self.j4 = ScheduledJob(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 10),
-                               duration=timedelta(hours=4), delay='0d', machine_id="M2", project=self.project)
+                               duration=timedelta(hours=4), delay='0d', machine_id="M2", project=self.project,
+                               previous_machines=["M1", "M2"])
         self.jobs = [self.j1, self.j2, self.j3, self.j4]
         self.creatures = list(range(4))
 
