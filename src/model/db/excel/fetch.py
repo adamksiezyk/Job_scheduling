@@ -50,7 +50,7 @@ def fetch_jobs(series: pd.Series) -> list[Job]:
         '8.VA.MBAT': ['1.VA.NAB', '2.VA.RS', '3.VA.BKOM', '4.VA.MKOM', '5.VA.KOMWKŁ', '6.VA.MKONC', '7.VA.OWIE']
     }
     return [Job(duration, str(machine), delay, project, previous_machines[machine])
-            for machine, duration, delay in zip(machines, durations, delays) if duration > timedelta(0)]
+            for machine, duration, delay in zip(machines, durations, delays)]
 
 
 def fetch_all_resources(data_frame: pd.DataFrame) -> dict[str, list[Resource]]:

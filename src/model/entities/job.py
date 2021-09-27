@@ -18,6 +18,14 @@ class Job:
     project: Project  # Job's project ID
     previous_machines: list[str]  # List of previous machine IDs
 
+    def is_previous_job(self, job: Job) -> bool:
+        """
+        Checks if the given job has to be scheduled before self
+        @param job: job to check
+        @return: True if has to be scheduled before, else False
+        """
+        return self.project.id == job.project.id and job.machine_id in self.previous_machines
+
 
 @dataclass(frozen=True)
 class ScheduledJob(Job):

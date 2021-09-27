@@ -28,19 +28,20 @@ class TestGeneticScheduler(unittest.TestCase):
             "M2": [self.r1_m2, self.r2_m2, self.r3_m2]
         }
 
-        self.project = Project(start_dt=datetime(2021, 3, 28, 6), expiration_dt=datetime(2021, 4, 10), id="P1")
+        self.p1 = Project(start_dt=datetime(2021, 3, 28, 6), expiration_dt=datetime(2021, 4, 10), id="P1")
+        self.p2 = Project(start_dt=datetime(2021, 3, 28, 6), expiration_dt=datetime(2021, 4, 10), id="P2")
         self.j1 = ScheduledJob(start_dt=datetime(2021, 3, 28, 6), end_dt=datetime(2021, 3, 28, 14),
-                               duration=timedelta(hours=8), delay='0d', machine_id="M1", project=self.project,
-                               previous_machines=["M1", "M2"])
+                               duration=timedelta(hours=8), delay='0d', machine_id="M1", project=self.p1,
+                               previous_machines=[])
         self.j2 = ScheduledJob(start_dt=datetime(2021, 3, 28, 6), end_dt=datetime(2021, 3, 28, 14),
-                               duration=timedelta(hours=8), delay='0d', machine_id="M2", project=self.project,
-                               previous_machines=["M1", "M2"])
+                               duration=timedelta(hours=8), delay='0d', machine_id="M2", project=self.p1,
+                               previous_machines=["M1"])
         self.j3 = ScheduledJob(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 14),
-                               duration=timedelta(hours=8), delay='0d', machine_id="M1", project=self.project,
-                               previous_machines=["M1", "M2"])
+                               duration=timedelta(hours=8), delay='0d', machine_id="M1", project=self.p2,
+                               previous_machines=[])
         self.j4 = ScheduledJob(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 10),
-                               duration=timedelta(hours=4), delay='0d', machine_id="M2", project=self.project,
-                               previous_machines=["M1", "M2"])
+                               duration=timedelta(hours=4), delay='0d', machine_id="M2", project=self.p2,
+                               previous_machines=["M1"])
         self.jobs = [self.j1, self.j2, self.j3, self.j4]
         self.creatures = list(range(4))
 

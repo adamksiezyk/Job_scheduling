@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 from src.model.entities.job import ScheduledJob, Job
@@ -36,7 +36,13 @@ class Scheduler:
         if job_end_dt > job.project.expiration_dt:
             raise ValueError("Job duration exceeded project's expiration date")
 
-        if job_end_dt <= fastest_resource.end_dt:
+        if job.duration == timedelta(0):
+            # Empty job
+            scheduled_job = ScheduledJob(duration=job.duration, machine_id=job.machine_id,
+                                         previous_machines=job.previous_machines, delay=job.delay, project=job.project,
+                                         end_dt=job_end_dt, start_dt=job_start_dt)
+            self.queue.append(scheduled_job)
+        elif job_end_dt <= fastest_resource.end_dt:
             # This resource is enough
             new_resource = replace(fastest_resource, start_dt=job_end_dt)
             self.used_resources[job.machine_id][fastest_resource_idx] = new_resource
@@ -96,6 +102,8 @@ class Scheduler:
         @return: last scheduled job
         """
         previous_jobs = self.find_jobs_to_wait_for(job)
+        if not self.check_if_previous_machines_are_scheduled(job, previous_jobs):
+            raise ValueError("Wrong scheduling order")
         return max(previous_jobs) if previous_jobs else None
 
     def find_jobs_to_wait_for(self, job: Job) -> list[ScheduledJob]:
@@ -104,4 +112,15 @@ class Scheduler:
         @param job: current Job
         @return: list of scheduled jobs
         """
-        return [j for j in self.queue if j.project.id == job.project.id and j.machine_id in job.previous_machines]
+        return [j for j in self.queue if job.is_previous_job(j)]
+
+    @staticmethod
+    def check_if_previous_machines_are_scheduled(job: Job, scheduled_jobs: list[Job]) -> bool:
+        """
+        Checks if all previous machines for the given job are scheduled
+        @param job: job to check
+        @param scheduled_jobs: list of scheduled jobs
+        @return: True if previous machines are scheduled else False
+        """
+        previous_machines = [j.machine_id for j in scheduled_jobs]
+        return all(j in previous_machines for j in job.previous_machines)

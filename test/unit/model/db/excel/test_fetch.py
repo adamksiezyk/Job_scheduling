@@ -40,53 +40,64 @@ class TestFetch(unittest.TestCase):
 
     def test_fetch_job(self):
         p = Project(id="D1108610_1-26", start_dt=datetime(2020, 11, 23, 6), expiration_dt=datetime(2021, 1, 8))
-        j1 = Job(duration=timedelta(hours=0.798846154), delay="2d", machine_id="2.VA.RS", project=p,
-                 previous_machines=["1.VA.NAB"])
-        j2 = Job(duration=timedelta(hours=2.458461538), delay="1d", machine_id="3.VA.BKOM", project=p,
+        j1 = Job(duration=timedelta(hours=0), delay="1d", machine_id="1.VA.NAB", project=p,
                  previous_machines=[])
-        j3 = Job(duration=timedelta(hours=1.348076923), delay="2d", machine_id="4.VA.MKOM", project=p,
+        j2 = Job(duration=timedelta(hours=0.798846154), delay="2d", machine_id="2.VA.RS", project=p,
+                 previous_machines=["1.VA.NAB"])
+        j3 = Job(duration=timedelta(hours=2.458461538), delay="1d", machine_id="3.VA.BKOM", project=p,
+                 previous_machines=[])
+        j4 = Job(duration=timedelta(hours=1.348076923), delay="2d", machine_id="4.VA.MKOM", project=p,
                  previous_machines=["3.VA.BKOM"])
-        j4 = Job(duration=timedelta(hours=2.685), delay="1d", machine_id="5.VA.KOMWKŁ", project=p,
+        j5 = Job(duration=timedelta(hours=2.685), delay="1d", machine_id="5.VA.KOMWKŁ", project=p,
                  previous_machines=['1.VA.NAB', '2.VA.RS', '3.VA.BKOM', '4.VA.MKOM'])
-        j5 = Job(duration=timedelta(hours=3.174230769), delay="2d", machine_id="6.VA.MKONC", project=p,
+        j6 = Job(duration=timedelta(hours=3.174230769), delay="2d", machine_id="6.VA.MKONC", project=p,
                  previous_machines=['1.VA.NAB', '2.VA.RS', '3.VA.BKOM', '4.VA.MKOM', '5.VA.KOMWKŁ'])
-        j6 = Job(duration=timedelta(hours=3.995), delay="1d", machine_id="8.VA.MBAT", project=p,
+        j7 = Job(duration=timedelta(hours=0), delay="0d", machine_id="7.VA.OWIE", project=p,
+                 previous_machines=['1.VA.NAB', '2.VA.RS', '3.VA.BKOM', '4.VA.MKOM', '5.VA.KOMWKŁ', '6.VA.MKONC'])
+        j8 = Job(duration=timedelta(hours=3.995), delay="1d", machine_id="8.VA.MBAT", project=p,
                  previous_machines=['1.VA.NAB', '2.VA.RS', '3.VA.BKOM', '4.VA.MKOM', '5.VA.KOMWKŁ', '6.VA.MKONC',
                                     '7.VA.OWIE'])
-        self.assertEqual([j1, j2, j3, j4, j5, j6], fetch_jobs(self.schedule.iloc[0]))
+        self.assertEqual([j1, j2, j3, j4, j5, j6, j7, j8], fetch_jobs(self.schedule.iloc[0]))
 
     def test_fetch_all_jobs(self):
         p1 = Project(id="D1108610_1-26", start_dt=datetime(2020, 11, 23, 6), expiration_dt=datetime(2021, 1, 8))
-        j1 = Job(duration=timedelta(hours=0.798846154), delay="2d", machine_id="2.VA.RS", project=p1,
-                 previous_machines=["1.VA.NAB"])
-        j2 = Job(duration=timedelta(hours=2.458461538), delay="1d", machine_id="3.VA.BKOM", project=p1,
+        j1 = Job(duration=timedelta(hours=0), delay="1d", machine_id="1.VA.NAB", project=p1,
                  previous_machines=[])
-        j3 = Job(duration=timedelta(hours=1.348076923), delay="2d", machine_id="4.VA.MKOM", project=p1,
+        j2 = Job(duration=timedelta(hours=0.798846154), delay="2d", machine_id="2.VA.RS", project=p1,
+                 previous_machines=["1.VA.NAB"])
+        j3 = Job(duration=timedelta(hours=2.458461538), delay="1d", machine_id="3.VA.BKOM", project=p1,
+                 previous_machines=[])
+        j4 = Job(duration=timedelta(hours=1.348076923), delay="2d", machine_id="4.VA.MKOM", project=p1,
                  previous_machines=["3.VA.BKOM"])
-        j4 = Job(duration=timedelta(hours=2.685), delay="1d", machine_id="5.VA.KOMWKŁ", project=p1,
+        j5 = Job(duration=timedelta(hours=2.685), delay="1d", machine_id="5.VA.KOMWKŁ", project=p1,
                  previous_machines=['1.VA.NAB', '2.VA.RS', '3.VA.BKOM', '4.VA.MKOM'])
-        j5 = Job(duration=timedelta(hours=3.174230769), delay="2d", machine_id="6.VA.MKONC", project=p1,
+        j6 = Job(duration=timedelta(hours=3.174230769), delay="2d", machine_id="6.VA.MKONC", project=p1,
                  previous_machines=['1.VA.NAB', '2.VA.RS', '3.VA.BKOM', '4.VA.MKOM', '5.VA.KOMWKŁ'])
-        j6 = Job(duration=timedelta(hours=3.995), delay="1d", machine_id="8.VA.MBAT", project=p1,
+        j7 = Job(duration=timedelta(hours=0), delay="0d", machine_id="7.VA.OWIE", project=p1,
+                 previous_machines=['1.VA.NAB', '2.VA.RS', '3.VA.BKOM', '4.VA.MKOM', '5.VA.KOMWKŁ', '6.VA.MKONC'])
+        j8 = Job(duration=timedelta(hours=3.995), delay="1d", machine_id="8.VA.MBAT", project=p1,
                  previous_machines=['1.VA.NAB', '2.VA.RS', '3.VA.BKOM', '4.VA.MKOM', '5.VA.KOMWKŁ', '6.VA.MKONC',
                                     '7.VA.OWIE'])
         p2 = Project(id="D1108610_2-26", start_dt=datetime(2020, 11, 23, 6), expiration_dt=datetime(2021, 1, 8))
-        j7 = Job(duration=timedelta(hours=5.34), delay="2d", machine_id="2.VA.RS", project=p2,
-                 previous_machines=["1.VA.NAB"])
-        j8 = Job(duration=timedelta(hours=8.04), delay="1d", machine_id="3.VA.BKOM", project=p2,
+        j9 = Job(duration=timedelta(hours=0), delay="1d", machine_id="1.VA.NAB", project=p2,
                  previous_machines=[])
-        j9 = Job(duration=timedelta(hours=1.5), delay="2d", machine_id="4.VA.MKOM", project=p2,
-                 previous_machines=["3.VA.BKOM"])
-        j10 = Job(duration=timedelta(hours=0.685), delay="1d", machine_id="5.VA.KOMWKŁ", project=p2,
+        j10 = Job(duration=timedelta(hours=5.34), delay="2d", machine_id="2.VA.RS", project=p2,
+                  previous_machines=["1.VA.NAB"])
+        j11 = Job(duration=timedelta(hours=8.04), delay="1d", machine_id="3.VA.BKOM", project=p2,
+                  previous_machines=[])
+        j12 = Job(duration=timedelta(hours=1.5), delay="2d", machine_id="4.VA.MKOM", project=p2,
+                  previous_machines=["3.VA.BKOM"])
+        j13 = Job(duration=timedelta(hours=0.685), delay="1d", machine_id="5.VA.KOMWKŁ", project=p2,
                   previous_machines=['1.VA.NAB', '2.VA.RS', '3.VA.BKOM', '4.VA.MKOM'])
-        j11 = Job(duration=timedelta(hours=6.536), delay="2d", machine_id="6.VA.MKONC", project=p2,
+        j14 = Job(duration=timedelta(hours=6.536), delay="2d", machine_id="6.VA.MKONC", project=p2,
                   previous_machines=['1.VA.NAB', '2.VA.RS', '3.VA.BKOM', '4.VA.MKOM', '5.VA.KOMWKŁ'])
-        j12 = Job(duration=timedelta(hours=7.215332), delay="0d", machine_id="7.VA.OWIE", project=p2,
+        j15 = Job(duration=timedelta(hours=7.215332), delay="0d", machine_id="7.VA.OWIE", project=p2,
                   previous_machines=['1.VA.NAB', '2.VA.RS', '3.VA.BKOM', '4.VA.MKOM', '5.VA.KOMWKŁ', '6.VA.MKONC'])
-        j13 = Job(duration=timedelta(hours=2.9), delay="1d", machine_id="8.VA.MBAT", project=p2,
+        j16 = Job(duration=timedelta(hours=2.9), delay="1d", machine_id="8.VA.MBAT", project=p2,
                   previous_machines=['1.VA.NAB', '2.VA.RS', '3.VA.BKOM', '4.VA.MKOM', '5.VA.KOMWKŁ', '6.VA.MKONC',
                                      '7.VA.OWIE'])
-        self.assertEqual([j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13], fetch_all_jobs(self.schedule))
+        self.assertEqual([j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15, j16],
+                         fetch_all_jobs(self.schedule))
 
     def test_fetch_resources(self):
         r1 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14),

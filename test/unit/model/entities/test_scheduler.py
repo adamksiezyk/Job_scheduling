@@ -130,7 +130,7 @@ class TestScheduler(TestCase):
         self.assertEqual([self.j2, self.j4], self.scheduler.find_jobs_to_wait_for(self.j4))
 
     def test_find_last_scheduled_job_not_found(self):
-        self.assertEqual(None, self.empty_scheduler.find_last_scheduled_job(self.j3))
+        self.assertEqual(None, self.empty_scheduler.find_last_scheduled_job(self.j1))
         self.assertEqual(None, self.scheduler.find_last_scheduled_job(self.j1))
 
     def test_find_last_scheduled_job_found(self):
