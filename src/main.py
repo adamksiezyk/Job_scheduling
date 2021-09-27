@@ -10,7 +10,7 @@ def main() -> None:
     sheet_jobs = 'Linia VA'
     path_resources = '..\\WorkCalendar.xlsx'
     sheet_resources = 'Sheet1'
-    algorithm = 1
+    algorithm = 0
     if algorithm == 0:
         controller.schedule_genetic(path_jobs=path_jobs, sheet_jobs=sheet_jobs, path_resources=path_resources,
                                     sheet_resources=sheet_resources, population_size=10, generation_limit=20)

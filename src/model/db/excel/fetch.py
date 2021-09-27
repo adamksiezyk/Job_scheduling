@@ -19,16 +19,45 @@ def fetch_project(project: pd.Series) -> Project:
                    project.iloc[0])
 
 
-def fetch_all_jobs(data_frame: pd.DataFrame) -> list[Job]:
+def fetch_jobs_list(data_frame: pd.DataFrame) -> list[Job]:
     """
     Fetches jobs from dataframe
     @param data_frame: pandas dataframe
     @return: list of jobs
     """
-    return reduce(lambda ans, row: ans + fetch_jobs(row[1]), data_frame.iterrows(), [])
+    return reduce(lambda ans, row: ans + fetch_jobs_in_project(row[1]), data_frame.iterrows(), [])
 
 
-def fetch_jobs(series: pd.Series) -> list[Job]:
+def fetch_jobs_dict(data_frame: pd.DataFrame) -> dict[Project, list[Job]]:
+    """
+    Fetches a dict of project, job list pairs from the dataframe
+    @param data_frame: pandas dataframe
+    @return: dict of project, job list pairs
+    """
+    return {fetch_project(row): fetch_jobs_in_project(row) for _, row in data_frame.iterrows()}
+
+
+def fetch_jobs_dict_from_list(jobs_list: list[Job]) -> dict[Project, list[Job]]:
+    """
+    Fetches jobs dict from jobs list
+    @param jobs_list: list of jobs
+    @return: a dict of jobs
+    """
+    jobs_dict = {}
+    for c in jobs_list:
+        if c.project.id in jobs_dict:
+            jobs_dict[c.project.id].append(c)
+        else:
+            jobs_dict[c.project.id] = [c]
+    return functools.reduce(lambda ans, job: append_to_dict_value_or_create_value(ans, job.project, job), jobs_list, {})
+
+
+def append_to_dict_value_or_create_value(_dict: dict[Project, list[Job]], key: Project, value: Job
+                                         ) -> dict[Project, list[Job]]:
+    return {**_dict, key: _dict[key] + [value]} if key in _dict else {**_dict, key: [value]}
+
+
+def fetch_jobs_in_project(series: pd.Series) -> list[Job]:
     """
     Fetches jobs from series
     @param series: pandas series

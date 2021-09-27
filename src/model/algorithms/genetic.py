@@ -1,8 +1,9 @@
 from abc import abstractmethod, ABC
-from random import sample, choices, random, randint
+from random import sample, choices, random, randint, shuffle
 from typing import TypeVar, Callable
 
 from src.model.algorithms.algorithm import Algorithm, SchedulingAlgorithm
+from src.model.db.excel.fetch import fetch_jobs_dict_from_list
 from src.model.entities.job import Job
 from src.model.entities.resource import Resource
 from src.utils import lib
@@ -116,7 +117,22 @@ class GeneticScheduler(SchedulingAlgorithm, Genetic):
         Creates a genome out of the creatures
         @return: genome
         """
-        return sample(self.CREATURES, len(self.CREATURES))
+        creatures_dict = fetch_jobs_dict_from_list(self.JOBS)
+        indices = list(range(sum(len(c) for c in creatures_dict.values())))
+        grouped_indices = [[indices.pop(0) for _ in range(len(c))] for c in creatures_dict.values()]
+        shuffle(grouped_indices)  # Shuffle projects
+        return self.shuffle_jobs(grouped_indices)
+
+    @staticmethod
+    def shuffle_jobs(matrix: list[list]) -> list:
+        res = []
+        for vec in matrix:
+            i = 0
+            for elem in vec:
+                n = randint(i, len(res))
+                res.insert(n, elem)
+                i = n + 1
+        return res
 
     def create_population(self, amount: int) -> Population:
         """
