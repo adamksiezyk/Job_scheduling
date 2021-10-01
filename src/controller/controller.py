@@ -52,10 +52,11 @@ def schedule_genetic(path_jobs: str, sheet_jobs: str, path_resources: str, sheet
     solution = algorithm.optimize(population_size=population_size, generation_limit=generation_limit,
                                   mutation_amount=15, mutation_probability=0.6)
     scheduler = Scheduler(resources)
-    [scheduler.schedule_job(jobs[i]) for i in solution]
+    for i in solution:
+        scheduler.schedule_job(jobs[i])
     print(f"Optimal solution takes: {scheduler.calculate_queue_duration()}")
 
-    # gantt_chart(scheduler.queue)
+    gantt_chart(scheduler.queue)
     return scheduler
 
 
@@ -74,7 +75,8 @@ def schedule_brute_force(path_jobs: str, sheet_jobs: str, path_resources: str, s
     algorithm = BruteForceScheduler(jobs, resources)
     solution = algorithm.optimize()
     scheduler = Scheduler(resources)
-    [scheduler.schedule_job(job) for job in solution]
+    for job in solution:
+        scheduler.schedule_job(job)
     print(f"Optimal solution takes: {scheduler.calculate_queue_duration()}")
 
     gantt_chart(scheduler.queue)

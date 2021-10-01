@@ -119,20 +119,20 @@ class GeneticScheduler(SchedulingAlgorithm, Genetic):
         """
         creatures_dict = fetch_jobs_dict_from_list(self.JOBS)
         indices = list(range(sum(len(c) for c in creatures_dict.values())))
-        grouped_indices = [[indices.pop(0) for _ in range(len(c))] for c in creatures_dict.values()]
-        shuffle(grouped_indices)  # Shuffle projects
-        return self.shuffle_jobs(grouped_indices)
+        indices_grouped_by_project = [[indices.pop(0) for _ in range(len(c))] for c in creatures_dict.values()]
+        shuffle(indices_grouped_by_project)  # Shuffle projects
+        return self.shuffle_jobs(indices_grouped_by_project)
 
     @staticmethod
-    def shuffle_jobs(matrix: list[list]) -> list:
-        res = []
-        for vec in matrix:
+    def shuffle_jobs(jobs_grouped_by_project: list[list]) -> list:
+        shuffled_jobs = []
+        for jobs in jobs_grouped_by_project:
             i = 0
-            for elem in vec:
-                n = randint(i, len(res))
-                res.insert(n, elem)
+            for job in jobs:
+                n = randint(i, len(shuffled_jobs))
+                shuffled_jobs.insert(n, job)
                 i = n + 1
-        return res
+        return shuffled_jobs
 
     def create_population(self, amount: int) -> Population:
         """
@@ -159,16 +159,24 @@ class GeneticScheduler(SchedulingAlgorithm, Genetic):
         @param b: parent B
         @return: crossover children of the parent genomes
         """
-        length = len(a)
-        if length != len(b):
-            raise ValueError("Both genomes have to be equal lengths")
+        parent_a = [(c, self.JOBS[c]) for c in a]
+        parent_b = [(c, self.JOBS[c]) for c in b]
+        subset_len = randint(1, len(self.JOBS))
+        subset_projects = {job.project for job in sample(self.JOBS, subset_len)}
+        return self._pmx(parent_a, parent_b, subset_projects), self._pmx(parent_b, parent_a, subset_projects)
 
-        p = randint(1, length - 1)
-        leftover_a = [elem for elem in a[p:] if elem not in b[p:]]
-        leftover_b = [elem for elem in b[p:] if elem not in a[p:]]
-        child_a = [elem if elem not in b[p:] else leftover_a.pop(0) for elem in a[:p]] + b[p:]
-        child_b = [elem if elem not in a[p:] else leftover_b.pop(0) for elem in b[:p]] + a[p:]
-        return child_a, child_b
+    @staticmethod
+    def _pmx(a, b, projects):
+        """
+        Partial Mapper Crossover
+        @param a: parent a
+        @param b: parent b
+        @param projects: list of projects to crossover
+        @return: child
+        """
+        subset = [c if job.project in projects else None for c, job in a]
+        proto = [c for c, job in b if c not in subset]
+        return [s if s is not None else proto.pop(0) for s in subset]
 
     def mutation(self, genome: Genome, amount: int, probability: float) -> Genome:
         """
@@ -178,15 +186,19 @@ class GeneticScheduler(SchedulingAlgorithm, Genetic):
         @param probability: probability of the mutation of a single creature
         @return: genome with mutated creatures
         """
-        length = len(genome)
-        if amount > length:
-            raise ValueError("Amount of jobs to modify is greater then amount of jobs in genome")
-
+        _genome = [self.JOBS[c] for c in genome]
         mutated_genome = [*genome]
-        for idx, new_idx in zip(sample(range(length), amount), sample(range(length), amount)):
+        old_projects = {job.project for job in sample(self.JOBS, amount)}
+        new_projects = {job.project for job in sample(self.JOBS, amount)}
+        old_jobs_grouped_by_project = [[i for i, job in enumerate(_genome) if job.project == project]
+                                       for project in old_projects]
+        new_jobs_grouped_by_project = [[i for i, job in enumerate(_genome) if job.project == project]
+                                       for project in new_projects]
+        for old_jobs, new_jobs in zip(old_jobs_grouped_by_project, new_jobs_grouped_by_project):
             if random() > probability:
                 continue
-            mutated_genome[idx], mutated_genome[new_idx] = mutated_genome[new_idx], mutated_genome[idx]
+            for old_i, new_i in zip(old_jobs, new_jobs):
+                mutated_genome[old_i], mutated_genome[new_i] = mutated_genome[new_i], mutated_genome[old_i]
         return mutated_genome
 
     def fitness(self, genome: Genome) -> float:

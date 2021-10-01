@@ -122,5 +122,4 @@ class Scheduler:
         @param scheduled_jobs: list of scheduled jobs
         @return: True if previous machines are scheduled else False
         """
-        previous_machines = [j.machine_id for j in scheduled_jobs]
-        return all(j in previous_machines for j in job.previous_machines)
+        return set(job.previous_machines) <= set(j.machine_id for j in scheduled_jobs)

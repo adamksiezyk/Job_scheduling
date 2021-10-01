@@ -7,6 +7,7 @@ import pandas as pd
 from src.model.entities.job import Job
 from src.model.entities.project import Project
 from src.model.entities.resource import Resource
+from src.model.entities.scheduler import Scheduler
 
 
 def fetch_project(project: pd.Series) -> Project:
@@ -34,7 +35,7 @@ def fetch_jobs_dict(data_frame: pd.DataFrame) -> dict[Project, list[Job]]:
     @param data_frame: pandas dataframe
     @return: dict of project, job list pairs
     """
-    return {fetch_project(row): fetch_jobs_in_project(row) for _, row in data_frame.iterrows()}
+    return {fetch_project(row): order_jobs(fetch_jobs_in_project(row)) for _, row in data_frame.iterrows()}
 
 
 def fetch_jobs_dict_from_list(jobs_list: list[Job]) -> dict[Project, list[Job]]:
@@ -43,18 +44,9 @@ def fetch_jobs_dict_from_list(jobs_list: list[Job]) -> dict[Project, list[Job]]:
     @param jobs_list: list of jobs
     @return: a dict of jobs
     """
-    jobs_dict = {}
-    for c in jobs_list:
-        if c.project.id in jobs_dict:
-            jobs_dict[c.project.id].append(c)
-        else:
-            jobs_dict[c.project.id] = [c]
-    return functools.reduce(lambda ans, job: append_to_dict_value_or_create_value(ans, job.project, job), jobs_list, {})
-
-
-def append_to_dict_value_or_create_value(_dict: dict[Project, list[Job]], key: Project, value: Job
-                                         ) -> dict[Project, list[Job]]:
-    return {**_dict, key: _dict[key] + [value]} if key in _dict else {**_dict, key: [value]}
+    jobs_dict = functools.reduce(lambda ans, job: append_to_dict_value_or_create_value(ans, job.project, job),
+                                 jobs_list, {})
+    return {key: order_jobs(value) for key, value in jobs_dict.items()}
 
 
 def fetch_jobs_in_project(series: pd.Series) -> list[Job]:
@@ -80,6 +72,25 @@ def fetch_jobs_in_project(series: pd.Series) -> list[Job]:
     }
     return [Job(duration, str(machine), delay, project, previous_machines[machine])
             for machine, duration, delay in zip(machines, durations, delays)]
+
+
+def append_to_dict_value_or_create_value(_dict: dict[Project, list[Job]], key: Project, value: Job
+                                         ) -> dict[Project, list[Job]]:
+    return {**_dict, key: _dict[key] + [value]} if key in _dict else {**_dict, key: [value]}
+
+
+def order_jobs(_jobs: list[Job]) -> list[Job]:
+    jobs = [*_jobs]
+    ordered_jobs = []
+    while jobs:
+        jobs_next = []
+        for job in jobs:
+            if Scheduler.check_if_previous_machines_are_scheduled(job, ordered_jobs):
+                ordered_jobs.append(job)
+            else:
+                jobs_next.append(job)
+        jobs = jobs_next
+    return ordered_jobs
 
 
 def fetch_all_resources(data_frame: pd.DataFrame) -> dict[str, list[Resource]]:

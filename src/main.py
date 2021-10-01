@@ -6,9 +6,9 @@ def main() -> None:
     Main function, starts scheduling
     @return: None
     """
-    path_jobs = '..\\Linia_VA.xlsx'
+    path_jobs = '..\\resources\\Linia_VA_08_2021.xlsx'
     sheet_jobs = 'Linia VA'
-    path_resources = '..\\WorkCalendar.xlsx'
+    path_resources = '..\\resources\\WorkCalendar_08_2021.xlsx'
     sheet_resources = 'Sheet1'
     algorithm = 0
     if algorithm == 0:
