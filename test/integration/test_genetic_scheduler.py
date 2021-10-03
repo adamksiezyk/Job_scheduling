@@ -1,6 +1,6 @@
 import unittest
 from datetime import datetime, timedelta
-from random import sample
+from random import sample, seed
 
 from src.model.algorithms.genetic import GeneticScheduler
 from src.model.entities.job import ScheduledJob
@@ -11,6 +11,7 @@ from src.model.entities.scheduler import Scheduler
 
 class TestGeneticScheduler(unittest.TestCase):
     def setUp(self):
+        seed(2021)
         self.r1_m1 = Resource(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 14),
                               worker_amount=1)
         self.r2_m1 = Resource(start_dt=datetime(2021, 4, 1, 14), end_dt=datetime(2021, 4, 1, 22),

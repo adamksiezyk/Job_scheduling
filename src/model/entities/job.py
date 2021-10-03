@@ -24,7 +24,7 @@ class Job:
         @param job: job to check
         @return: True if has to be scheduled before, else False
         """
-        return self.project.id == job.project.id and job.machine_id in self.previous_machines
+        return self.project == job.project and job.machine_id in self.previous_machines
 
 
 @dataclass(frozen=True)

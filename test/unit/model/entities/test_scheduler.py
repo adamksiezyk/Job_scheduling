@@ -98,7 +98,7 @@ class TestScheduler(TestCase):
 
     def test_schedule_job_before_project_start(self):
         p = Project(start_dt=datetime(2021, 4, 2), expiration_dt=datetime(2021, 4, 10), id="P1")
-        j = Job(duration=timedelta(hours=10), delay="1d", machine_id="M2", project=p, previous_machines=["M2"])
+        j = Job(duration=timedelta(hours=10), delay="1d", machine_id="M2", project=p, previous_machines=[])
         self.scheduler.schedule_job(j)
         self.assertLessEqual(p.start_dt, self.scheduler.queue[-1].start_dt)
 
@@ -107,17 +107,43 @@ class TestScheduler(TestCase):
         j = Job(duration=timedelta(hours=10), delay="1d", machine_id="M2", project=p, previous_machines=[])
         self.assertRaises(ValueError, self.scheduler.schedule_job, j)
 
+    def test_create_scheduled_entities_for_single_resource(self):
+        job = Job(duration=timedelta(hours=6), delay="0d", machine_id="M1", project=self.project,
+                  previous_machines=["M1"])
+        job_start_dt = datetime(2021, 4, 1, 6)
+        scheduled_job = ScheduledJob(duration=job.duration, delay=job.delay, machine_id=job.machine_id,
+                                     project=job.project, start_dt=job_start_dt,
+                                     end_dt=datetime(2021, 4, 1, 9), previous_machines=job.previous_machines)
+        resource = replace(self.r1_m1, start_dt=scheduled_job.end_dt)
+        next_job = None
+        expected_output = (scheduled_job, resource, next_job)
+        self.assertEqual(expected_output, self.scheduler.create_scheduled_entities(job=job, resource=self.r1_m1,
+                                                                                   job_start_dt=job_start_dt))
+
+    def test_create_scheduled_entities_for_multiple_resources(self):
+        job = Job(duration=timedelta(hours=20), delay="0d", machine_id="M1", project=self.project,
+                  previous_machines=[])
+        job_start_dt = datetime(2021, 4, 1, 6)
+        scheduled_job = ScheduledJob(duration=timedelta(hours=16), delay="0d", machine_id=job.machine_id,
+                                     project=job.project, start_dt=job_start_dt,
+                                     end_dt=datetime(2021, 4, 1, 14), previous_machines=job.previous_machines)
+        resource = None
+        next_job = replace(job, duration=timedelta(hours=4))
+        expected_output = (scheduled_job, resource, next_job)
+        self.assertEqual(expected_output, self.scheduler.create_scheduled_entities(job=job, resource=self.r1_m1,
+                                                                                   job_start_dt=job_start_dt))
+
     def test_find_earliest_resource_not_found(self):
-        self.assertEqual((None, None), self.empty_scheduler.find_earliest_resource("M1", datetime(2021, 3, 28, 8)))
-        self.assertEqual((None, None), self.scheduler.find_earliest_resource("M0", datetime(2021, 3, 28, 8)))
-        self.assertEqual((None, None), self.scheduler.find_earliest_resource("M1", datetime(2021, 4, 20, 8)))
+        self.assertRaises(ValueError, self.empty_scheduler.find_earliest_resource, "M1", datetime(2021, 3, 28, 8))
+        self.assertRaises(ValueError, self.scheduler.find_earliest_resource, "M0", datetime(2021, 3, 28, 8))
+        self.assertRaises(ValueError, self.scheduler.find_earliest_resource, "M1", datetime(2021, 4, 20, 8))
 
     def test_find_earliest_resource_found(self):
         self.assertEqual((0, self.r1_m1), self.scheduler.find_earliest_resource("M1", datetime(2021, 4, 1, 8)))
 
-    def find_fastest_start_dt(self):
-        self.assertEqual(self.j1.project.start_dt, self.empty_scheduler.find_fastest_start_dt(self.j1))
-        self.assertEqual(self.r1_m1, self.scheduler.find_fastest_start_dt(self.j1))
+    def test_find_previous_job_end_dt(self):
+        self.assertEqual(self.j1.project.start_dt, self.empty_scheduler.find_previous_job_end_dt(self.j1))
+        self.assertEqual(datetime(2021, 3, 28, 6), self.scheduler.find_previous_job_end_dt(self.j1))
 
     def test_find_jobs_to_wait_for_not_found(self):
         self.assertEqual([], self.empty_scheduler.find_jobs_to_wait_for(self.j2))
@@ -129,9 +155,9 @@ class TestScheduler(TestCase):
         self.assertEqual([self.j1, self.j3], self.scheduler.find_jobs_to_wait_for(self.j3))
         self.assertEqual([self.j2, self.j4], self.scheduler.find_jobs_to_wait_for(self.j4))
 
-    def test_find_last_scheduled_job_not_found(self):
-        self.assertEqual(None, self.empty_scheduler.find_last_scheduled_job(self.j1))
-        self.assertEqual(None, self.scheduler.find_last_scheduled_job(self.j1))
+    def test_find_previous_job_not_found(self):
+        self.assertEqual(None, self.empty_scheduler.find_previous_job(self.j1))
+        self.assertEqual(None, self.scheduler.find_previous_job(self.j1))
 
-    def test_find_last_scheduled_job_found(self):
-        self.assertEqual(datetime(2021, 4, 1, 14), self.scheduler.find_last_scheduled_job(self.j3).end_dt)
+    def test_find_previous_job_found(self):
+        self.assertEqual(datetime(2021, 4, 1, 14), self.scheduler.find_previous_job(self.j3).end_dt)
