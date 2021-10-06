@@ -4,7 +4,7 @@ from src.model.algorithms.neh import NehScheduler
 from src.model.db.excel.fetch import fetch_all_resources, fetch_jobs_list
 from src.model.db.excel.load_data import load_data
 from src.model.entities.job import Job
-from src.model.entities.resource import Resource
+from src.model.entities.resource import Resource, Resources
 from src.model.entities.scheduler import Scheduler
 from src.view.excel import scheduler_to_excel
 from src.view.gantt_chart import gantt_chart
@@ -22,7 +22,7 @@ def get_jobs(path, sheet) -> list[Job]:
     return jobs
 
 
-def get_resources(path, sheet) -> dict[str, list[Resource]]:
+def get_resources(path, sheet) -> Resources:
     """
     Loads resources and represents them
     @param path: path to xlsx file

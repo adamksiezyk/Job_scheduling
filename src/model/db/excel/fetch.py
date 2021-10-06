@@ -6,7 +6,7 @@ import pandas as pd
 
 from src.model.entities.job import Job
 from src.model.entities.project import Project
-from src.model.entities.resource import Resource
+from src.model.entities.resource import Resource, Resources
 from src.model.entities.scheduler import Scheduler
 
 
@@ -93,27 +93,31 @@ def order_jobs(_jobs: list[Job]) -> list[Job]:
     return ordered_jobs
 
 
-def fetch_all_resources(data_frame: pd.DataFrame) -> dict[str, list[Resource]]:
+def fetch_all_resources(data_frame: pd.DataFrame) -> Resources:
     """
     Fetches resources from dataframe
     @param data_frame: pandas dataframe
     @return: list of resources
     """
-    resources = {name: [] for name in data_frame.columns[2:-1]}
-    return functools.reduce(
-        lambda ans, elem: {key: value + fetch_resources(elem[1])[key] for key, value in ans.items()},
-        data_frame.iterrows(),
-        resources)
+    resources = Resources()
+    for _, row in data_frame.iterrows():
+        fetch_resources(resources, row)
+    return resources
 
 
-def fetch_resources(series: pd.Series) -> dict[str, list[Resource]]:
+def fetch_resources(resources: Resources, series: pd.Series) -> None:
     """
     Fetches resources from series
+    @param resources: resources container
     @param series: pandas series
     @return: list of resources
     """
     start_dt = series.iloc[0].to_pydatetime()
     end_dt = series.iloc[1].to_pydatetime()
-    resources = series.iloc[2:-1]
-    return {name: [Resource(start_dt=start_dt, end_dt=end_dt, worker_amount=int(amount.split('x')[1]))
-                   for _ in range(int(amount.split('x')[0]))] for name, amount in resources.iteritems()}
+    machines = series.iloc[2:-1]
+    for name, value in machines.iteritems():
+        amount = int(value.split('x')[0])
+        worker_amount = int(value.split('x')[1])
+        resource = Resource(start_dt=start_dt, end_dt=end_dt, worker_amount=worker_amount)
+        for _ in range(amount):
+            resources.append(name, resource)

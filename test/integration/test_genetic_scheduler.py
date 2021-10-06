@@ -5,7 +5,7 @@ from random import sample, seed
 from src.model.algorithms.genetic import GeneticScheduler
 from src.model.entities.job import ScheduledJob
 from src.model.entities.project import Project
-from src.model.entities.resource import Resource
+from src.model.entities.resource import Resource, Resources
 from src.model.entities.scheduler import Scheduler
 
 
@@ -24,10 +24,13 @@ class TestGeneticScheduler(unittest.TestCase):
                               worker_amount=2)
         self.r3_m2 = Resource(start_dt=datetime(2021, 4, 1, 22), end_dt=datetime(2021, 4, 2, 6),
                               worker_amount=2)
-        self.resources = {
-            "M1": [self.r1_m1, self.r2_m1],
-            "M2": [self.r1_m2, self.r2_m2, self.r3_m2]
-        }
+        self.resources = Resources()
+        self.resources.append("M1", self.r1_m1)
+        self.resources.append("M1", self.r2_m1)
+        self.resources.append("M1", self.r3_m1)
+        self.resources.append("M2", self.r1_m2)
+        self.resources.append("M2", self.r2_m2)
+        self.resources.append("M2", self.r3_m2)
 
         self.p1 = Project(start_dt=datetime(2021, 3, 28, 6), expiration_dt=datetime(2021, 4, 10), id="P1")
         self.p2 = Project(start_dt=datetime(2021, 3, 28, 6), expiration_dt=datetime(2021, 4, 10), id="P2")

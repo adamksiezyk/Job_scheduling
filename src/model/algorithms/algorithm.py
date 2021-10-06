@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TypeVar
 
 from src.model.entities.job import Job
-from src.model.entities.resource import Resource
+from src.model.entities.resource import Resources
 from src.model.entities.scheduler import Scheduler
 
 Solution = TypeVar("Solution")
@@ -32,10 +32,10 @@ class SchedulingAlgorithm(Algorithm, ABC):
     Base class for a Scheduling Algorithm
     """
 
-    def __init__(self, jobs: list[Job], resources: dict[str, list[Resource]]):
+    def __init__(self, jobs: list[Job], resources: Resources):
         """
         @param jobs: list of jobs to schedule
-        @param resources: list of available resources
+        @param resources: container of available resources
         """
         self.JOBS = jobs
         self.RESOURCES = resources

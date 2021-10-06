@@ -5,7 +5,7 @@ from typing import TypeVar, Callable
 from src.model.algorithms.algorithm import Algorithm, SchedulingAlgorithm
 from src.model.db.excel.fetch import fetch_jobs_dict_from_list
 from src.model.entities.job import Job
-from src.model.entities.resource import Resource
+from src.model.entities.resource import Resources
 from src.utils import lib
 
 Genome = TypeVar("Genome")
@@ -108,7 +108,7 @@ class Genetic(Algorithm, ABC):
 
 
 class GeneticScheduler(SchedulingAlgorithm, Genetic):
-    def __init__(self, jobs: list[Job], resources: dict[str, list[Resource]]):
+    def __init__(self, jobs: list[Job], resources: Resources):
         SchedulingAlgorithm.__init__(self, jobs=jobs, resources=resources)
         Genetic.__init__(self, creatures=list(range(len(jobs))))
 

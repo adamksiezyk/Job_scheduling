@@ -4,13 +4,13 @@ from unittest import TestCase
 
 from src.model.entities.job import ScheduledJob, Job
 from src.model.entities.project import Project
-from src.model.entities.resource import Resource
+from src.model.entities.resource import Resource, Resources
 from src.model.entities.scheduler import Scheduler
 
 
 class TestScheduler(TestCase):
     def setUp(self) -> None:
-        self.empty_scheduler = Scheduler({})
+        self.empty_scheduler = Scheduler(Resources())
 
         self.r1_m1 = Resource(start_dt=datetime(2021, 4, 1, 6), end_dt=datetime(2021, 4, 1, 14),
                               worker_amount=2)
@@ -24,10 +24,13 @@ class TestScheduler(TestCase):
                               worker_amount=2)
         self.r3_m2 = Resource(start_dt=datetime(2021, 4, 1, 22), end_dt=datetime(2021, 4, 2, 6),
                               worker_amount=2)
-        self.resources_init = {
-            "M1": [self.r1_m1, self.r2_m1, self.r3_m1],
-            "M2": [self.r1_m2, self.r2_m2, self.r3_m2]
-        }
+        self.resources_init = Resources()
+        self.resources_init.append("M1", self.r1_m1)
+        self.resources_init.append("M1", self.r2_m1)
+        self.resources_init.append("M1", self.r3_m1)
+        self.resources_init.append("M2", self.r1_m2)
+        self.resources_init.append("M2", self.r2_m2)
+        self.resources_init.append("M2", self.r3_m2)
 
         self.project = Project(start_dt=datetime(2021, 3, 28, 6), expiration_dt=datetime(2021, 4, 10), id="P1")
         self.j1 = ScheduledJob(start_dt=datetime(2021, 3, 28, 6), end_dt=datetime(2021, 3, 28, 14),
@@ -63,7 +66,7 @@ class TestScheduler(TestCase):
                          start_dt=datetime(2021, 4, 1, 14), end_dt=datetime(2021, 4, 1, 17), previous_machines=["M1"])
         r = replace(self.r2_m1, start_dt=s.end_dt)
         used_resources = {
-            'M1': {self.resources_init['M1'].index(self.r2_m1): r},
+            'M1': {self.resources_init.get_resources("M1").index(self.r2_m1): r},
             'M2': {}
         }
         self.queue_init.append(s)
@@ -85,8 +88,8 @@ class TestScheduler(TestCase):
         used_resources = {
             'M1': {},
             'M2': {
-                self.resources_init['M2'].index(self.r2_m2): None,
-                self.resources_init['M2'].index(self.r3_m2): r,
+                self.resources_init.get_resources("M2").index(self.r2_m2): None,
+                self.resources_init.get_resources("M2").index(self.r3_m2): r,
             }
         }
         self.queue_init.append(s1)

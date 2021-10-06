@@ -5,15 +5,15 @@ from datetime import datetime
 from typing import Optional
 
 from src.model.entities.job import ScheduledJob, Job
-from src.model.entities.resource import Resource
+from src.model.entities.resource import Resource, Resources
 
 
 class Scheduler:
-    def __init__(self, resources: dict[str, list[Resource]]):
+    def __init__(self, resources: Resources):
         # List of all resources
         self.RESOURCES = resources
         # Dict to indicate used resources
-        self.used_resources: dict[str, dict[int, Optional[Resource]]] = {key: {} for key in resources.keys()}
+        self.used_resources: dict[str, dict[int, Optional[Resource]]] = {key: {} for key in resources.get_machine_ids()}
         # Queue of scheduled jobs
         self.queue: list[ScheduledJob] = []
 
@@ -70,7 +70,7 @@ class Scheduler:
         try:
             r = self.used_resources[machine_id][index]
         except KeyError:
-            r = self.RESOURCES[machine_id][index]
+            r = self.RESOURCES.get_resource(machine_id, index)
         return None if (r is None or r.end_dt <= start_dt) else r
 
     def find_earliest_resource(self, machine_id: str, start_dt: datetime) -> tuple[Optional[int], Optional[Resource]]:
@@ -83,7 +83,7 @@ class Scheduler:
         # Use a generator to stop looping after first available resource is found
         try:
             return next(((i, self.get_available_resource(machine_id, i, start_dt))
-                         for i, r in enumerate(self.RESOURCES[machine_id])
+                         for i, r in enumerate(self.RESOURCES.get_resources(machine_id))
                          if self.get_available_resource(machine_id, i, start_dt) is not None))
         except (KeyError, StopIteration):
             raise ValueError("No resources available")

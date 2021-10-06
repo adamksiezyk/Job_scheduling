@@ -7,7 +7,7 @@ from src.model.db.excel.fetch import fetch_project, fetch_jobs_in_project, fetch
     fetch_all_resources, fetch_jobs_dict, fetch_jobs_dict_from_list
 from src.model.entities.job import Job
 from src.model.entities.project import Project
-from src.model.entities.resource import Resource
+from src.model.entities.resource import Resource, Resources
 
 
 class TestFetch(unittest.TestCase):
@@ -204,7 +204,7 @@ class TestFetch(unittest.TestCase):
                       worker_amount=1)
         r8 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14),
                       worker_amount=3)
-        resources = {
+        expected_resources = {
             "1.VA.NAB": [r1],
             "2.VA.RS": [r2] * 6,
             "3.VA.BKOM": [r3] * 4,
@@ -214,7 +214,10 @@ class TestFetch(unittest.TestCase):
             "7.VA.OWIE": [r7],
             "8.VA.MBAT": [r8] * 2,
         }
-        self.assertEqual(resources, fetch_resources(self.resources.iloc[0]))
+        resources = Resources()
+        fetch_resources(resources, self.resources.iloc[0])
+        for key, value in expected_resources.items():
+            self.assertEqual(value, resources.get_resources(key))
 
     def test_fetch_all_resources(self):
         r1 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14),
@@ -249,7 +252,7 @@ class TestFetch(unittest.TestCase):
                        worker_amount=1)
         r16 = Resource(start_dt=datetime(2020, 11, 12, 14), end_dt=datetime(2020, 11, 12, 22),
                        worker_amount=3)
-        resources = {
+        expected_resources = {
             "1.VA.NAB": [r1, r9],
             "2.VA.RS": [r2] * 6 + [r10] * 6,
             "3.VA.BKOM": [r3] * 4 + [r11] * 4,
@@ -259,4 +262,6 @@ class TestFetch(unittest.TestCase):
             "7.VA.OWIE": [r7, r15],
             "8.VA.MBAT": [r8] * 2 + [r16] * 2
         }
-        self.assertEqual(resources, fetch_all_resources(self.resources))
+        resources = fetch_all_resources(self.resources)
+        for key, values in expected_resources.items():
+            self.assertEqual(values, resources.get_resources(key))
