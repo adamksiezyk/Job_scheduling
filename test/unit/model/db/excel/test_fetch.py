@@ -7,7 +7,7 @@ from src.model.db.excel.fetch import fetch_project, fetch_jobs_in_project, fetch
     fetch_all_resources, fetch_jobs_dict, fetch_jobs_dict_from_list
 from src.model.entities.job import Job
 from src.model.entities.project import Project
-from src.model.entities.resource import Resource, Resources
+from src.model.entities.resource import Resource
 
 
 class TestFetch(unittest.TestCase):
@@ -214,10 +214,8 @@ class TestFetch(unittest.TestCase):
             "7.VA.OWIE": [r7],
             "8.VA.MBAT": [r8] * 2,
         }
-        resources = Resources()
-        fetch_resources(resources, self.resources.iloc[0])
-        for key, value in expected_resources.items():
-            self.assertEqual(value, resources.get_resources(key))
+        resources = fetch_resources(self.resources.iloc[0])
+        self.assertEqual(expected_resources, resources)
 
     def test_fetch_all_resources(self):
         r1 = Resource(start_dt=datetime(2020, 11, 12, 6), end_dt=datetime(2020, 11, 12, 14),

@@ -5,16 +5,12 @@ from datetime import datetime
 from typing import Optional
 
 from src.model.entities.job import ScheduledJob, Job
-from src.model.entities.resource import Resource, Resources
+from src.model.entities.resource import Resource, Resources, UsedResources
 
 
 class Scheduler:
     def __init__(self, resources: Resources):
-        # List of all resources
-        self.RESOURCES = resources
-        # Dict to indicate used resources
-        self.used_resources: dict[str, dict[int, Optional[Resource]]] = {key: {} for key in resources.get_machine_ids()}
-        # Queue of scheduled jobs
+        self.resources = UsedResources(resources)
         self.queue: list[ScheduledJob] = []
 
     def calculate_queue_duration(self) -> float:
@@ -26,13 +22,14 @@ class Scheduler:
 
     def schedule_job(self, job: Job) -> None:
         previous_job_end_dt = self.find_previous_job_end_dt(job)
-        earliest_resource_idx, earliest_resource = self.find_earliest_resource(job.machine_id, previous_job_end_dt)
+        earliest_resource_idx, earliest_resource = self.resources.find_earliest_resource(job.machine_id,
+                                                                                         previous_job_end_dt)
         job_start_dt = max(previous_job_end_dt, earliest_resource.start_dt)
         scheduled_job, new_resource, new_job = self.create_scheduled_entities(job, earliest_resource, job_start_dt)
         if scheduled_job.end_dt > job.project.expiration_dt:
             raise ValueError("Job duration exceeded project's expiration date")
         self.queue.append(scheduled_job)
-        self.used_resources[job.machine_id][earliest_resource_idx] = new_resource
+        self.resources.use_resource(job.machine_id, earliest_resource_idx, new_resource)
         if new_job is not None:
             self.schedule_job(new_job)
 
@@ -58,35 +55,6 @@ class Scheduler:
         new_resource = None if job_end_dt == resource.end_dt else replace(resource, start_dt=job_end_dt)
         new_job = replace(job, duration=job.duration - job_duration) if next_resource_needed else None
         return scheduled_job, new_resource, new_job
-
-    def get_available_resource(self, machine_id: str, index: int, start_dt: datetime) -> Optional[Resource]:
-        """
-        Returns the resource if available else None
-        @param machine_id: machine ID
-        @param index: machine idx
-        @param start_dt: start datetime
-        @return: available resource or None
-        """
-        try:
-            r = self.used_resources[machine_id][index]
-        except KeyError:
-            r = self.RESOURCES.get_resource(machine_id, index)
-        return None if (r is None or r.end_dt <= start_dt) else r
-
-    def find_earliest_resource(self, machine_id: str, start_dt: datetime) -> tuple[Optional[int], Optional[Resource]]:
-        """
-        Returns the earliest available resource for the given machine and start datetime
-        @param machine_id: machine ID
-        @param start_dt: start datetime
-        @return: earliest available resource and it's index
-        """
-        # Use a generator to stop looping after first available resource is found
-        try:
-            return next(((i, self.get_available_resource(machine_id, i, start_dt))
-                         for i, r in enumerate(self.RESOURCES.get_resources(machine_id))
-                         if self.get_available_resource(machine_id, i, start_dt) is not None))
-        except (KeyError, StopIteration):
-            raise ValueError("No resources available")
 
     def find_previous_job_end_dt(self, job: Job) -> datetime:
         """

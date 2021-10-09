@@ -99,25 +99,22 @@ def fetch_all_resources(data_frame: pd.DataFrame) -> Resources:
     @param data_frame: pandas dataframe
     @return: list of resources
     """
-    resources = Resources()
-    for _, row in data_frame.iterrows():
-        fetch_resources(resources, row)
-    return resources
+    empty_resources = {name: [] for name in data_frame.columns[2:-1]}
+    resources = functools.reduce(
+        lambda ans, elem: {key: value + fetch_resources(elem[1])[key] for key, value in ans.items()},
+        data_frame.iterrows(),
+        empty_resources)
+    return Resources(resources)
 
 
-def fetch_resources(resources: Resources, series: pd.Series) -> None:
+def fetch_resources(series: pd.Series) -> dict[str, list[Resource]]:
     """
     Fetches resources from series
-    @param resources: resources container
     @param series: pandas series
     @return: list of resources
     """
     start_dt = series.iloc[0].to_pydatetime()
     end_dt = series.iloc[1].to_pydatetime()
-    machines = series.iloc[2:-1]
-    for name, value in machines.iteritems():
-        amount = int(value.split('x')[0])
-        worker_amount = int(value.split('x')[1])
-        resource = Resource(start_dt=start_dt, end_dt=end_dt, worker_amount=worker_amount)
-        for _ in range(amount):
-            resources.append(name, resource)
+    resources = series.iloc[2:-1]
+    return {name: [Resource(start_dt=start_dt, end_dt=end_dt, worker_amount=int(amount.split('x')[1]))
+                   for _ in range(int(amount.split('x')[0]))] for name, amount in resources.iteritems()}
